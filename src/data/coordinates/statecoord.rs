@@ -1,6 +1,8 @@
 use super::coordstate::CoordState;
+
+#[derive(Clone)]
 pub struct StateCoord {
-    x: u32,
-    y: u32,
-    state: CoordState
+    pub x: u32,
+    pub y: u32,
+    pub state: CoordState
 }

@@ -2,8 +2,15 @@ use super::shiptype::ShipType;
 use crate::data::coordinates::coord::Coord;
 use crate::data::coordinates::statecoord::StateCoord;
 
+#[derive(Clone)]
 pub struct ShipPiece {
-    shipType: ShipType,
-    coords: Vec<StateCoord>,
-    reportedHitCoords: Vec<Coord>
+    pub shipType: ShipType,
+    pub coords: Vec<StateCoord>,
+    pub reportedHitCoords: Vec<Coord>
+}
+
+impl ShipPiece {
+    pub fn get_shot(&self, x: u32, y: u32) {
+        
+    }
 }

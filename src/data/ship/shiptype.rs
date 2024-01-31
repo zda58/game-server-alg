@@ -1,4 +1,4 @@
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Copy, Clone)]
 pub enum ShipType {
     SUBMARINE,
     DESTROYER,
@@ -7,12 +7,21 @@ pub enum ShipType {
 }
 
 impl ShipType {
-    pub fn value(&self) -> i32 {
+    pub fn len(&self) -> usize {
         match self {
-            SUBMARINE => 3,
-            DESTROYER => 4,
-            BATTLESHIP => 5,
-            CARRIER => 6
+            ShipType::SUBMARINE => 3,
+            ShipType::DESTROYER => 4,
+            ShipType::BATTLESHIP => 5,
+            ShipType::CARRIER => 6
+        }
+    }
+
+    pub fn symbol(&self) -> &str {
+        match self {
+            ShipType::SUBMARINE => "S",
+            ShipType::DESTROYER => "D",
+            ShipType::BATTLESHIP => "B",
+            ShipType::CARRIER => "C"
         }
     }
 }
