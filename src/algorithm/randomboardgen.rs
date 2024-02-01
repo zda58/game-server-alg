@@ -8,11 +8,11 @@ pub struct RandomBoard {
     ships: Vec<ShipPiece>
 }
 
-pub fn generate_random_board(spec: &HashMap<ShipType, u32>, height: usize, width: usize) -> (Vec<Vec<OwnCoord>>, Vec<ShipPiece>) {
+pub fn generate_random_board(spec: &HashMap<ShipType, u32>, height: usize, width: usize) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<ShipPiece>>>) {
     let mut rand = rand::thread_rng();
     let mut board: Vec<Vec<OwnCoord>> = Vec::new();
     let mut validBoard = false;
-    let mut ships: Vec<ShipPiece> = Vec::new();
+    let mut ships: Vec<Rc<RefCell<ShipPiece>>> = Vec::new();
     while !validBoard {
         ships = Vec::new();
         board = vec![vec![generate_null_coord(); height]; width];
@@ -48,7 +48,7 @@ pub fn generate_random_board(spec: &HashMap<ShipType, u32>, height: usize, width
                         overlap = true;
                     }
                 }
-                ships.push(ship_rc.borrow().clone());
+                ships.push(ship_rc);
             }
         }
         if !overlap {

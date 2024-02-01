@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+use std::{cell::RefCell, rc::Rc};
+
+
 use crate::algorithm::randomboardgen::generate_random_board;
 use crate::data::coordinates::coordstate::CoordState;
 use crate::data::coordinates::owncoord::OwnCoord;
@@ -13,16 +16,12 @@ pub struct AlgorithmPlayer {
     //model: AlgorithmModel,
     pub ownBoard: Vec<Vec<OwnCoord>>,
     pub otherBoard: Vec<Vec<StateCoord>>,
-    pub ships: Vec<ShipPiece>
+    pub ships: Vec<Rc<RefCell<ShipPiece>>>
 }
 
 impl AlgorithmPlayer {
     pub fn name(&self) -> String {
         self.name.clone()
-    }
-
-    pub fn setup(&self) {
-
     }
 
     pub fn take_shots(&self) {
@@ -33,12 +32,14 @@ impl AlgorithmPlayer {
 
     }
 
-    pub fn successfulHits(&self) {
+    pub fn record_hits(&self) {
 
     }
 
-    pub fn endGame(&self) {
-
+    pub fn get_ship_count(&self) -> u32 {
+        self.ships.iter()
+        .filter(|rc| rc.borrow().is_destroyed())
+        .count() as u32
     }
 }
 

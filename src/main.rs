@@ -16,8 +16,8 @@ fn main() {
         (ShipType::BATTLESHIP, 3),
         (ShipType::CARRIER, 3)
     ]);
-    let width = 50;
-    let height = 50;
+    let width = 15;
+    let height = 15;
     let player1 = 
     generate_algorithm_player("player1".to_string(), &specs, width, height);
     let player2 = 
