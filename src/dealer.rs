@@ -13,51 +13,57 @@ pub struct Dealer {
 
 impl Dealer {
     pub fn run(&self) {
+        let mut count: u32 = 0;
+
         let mut ships: HashMap<ShipType, u32> = HashMap::from ([
-            (ShipType::SUBMARINE, 3),
-            (ShipType::DESTROYER, 3),
-            (ShipType::BATTLESHIP, 3),
-            (ShipType::CARRIER, 3)
+            (ShipType::Submarine, 3),
+            (ShipType::Destroyer, 3),
+            (ShipType::Battleship, 3),
+            (ShipType::Carrier, 3)
         ]);
         
-        print_board(&self.player1.ownBoard);
+        print_board(&self.player1.own_board);
         println!();
-        print_board(&self.player2.ownBoard);
+        print_board(&self.player2.own_board);
         //let player1Ships: Vec<ShipPiece> = self.player1.setup();
-        let game_state = GameState::ONGOING;
-        while game_state == GameState::ONGOING {
+        let game_state = GameState::Ongoing;
+        
+        while game_state != GameState::Ongoing {
+            println!("loop count: {}", count);
             let p1shots: Vec<Coord> = self.player1.take_shots();
             let p2shots : Vec<Coord> = self.player2.take_shots();
 
             let p1hits: Vec<Coord> = self.player2.report_damage(p1shots);
             let p2hits: Vec<Coord> = self.player1.report_damage(p2shots);
-            self.player1.record_hits(p1hits);
-            self.player2.record_hits(p2hits);
+            self.player1.record_successful_hits(p1hits);
+            self.player2.record_successful_hits(p2hits);
 
             if self.player1.get_ship_count() == 0 && self.player2.get_ship_count() == 0 {
-                game_state == GameState::DRAW;
+                game_state == GameState::Draw;
             } else if self.player1.get_ship_count() == 0 {
-                game_state == GameState::P2WIN;
+                game_state == GameState::P2Win;
             } else if self.player2.get_ship_count() == 0 {
-                game_state == GameState::P1WIN;
+                game_state == GameState::P1Win;
             }
+            count += 1;
         }
         match game_state {
-            GameState::DRAW => println!("Draw game!"),
-            GameState::P1WIN => println!("Player 1 wins!"),
-            GameState::P2WIN => println!("Player 2 wins!"),
+            GameState::Draw => println!("Draw game!"),
+            GameState::P1Win => println!("Player 1 wins!"),
+            GameState::P2Win => println!("Player 2 wins!"),
             _ => ()
         }
+        
     }
 }
 
 fn print_board(board: &Vec<Vec<OwnCoord>>) {
-    let width = board.len();
-    let height = board[0].len();
+    let height = board.len();
+    let width = board[0].len();
     for y in 0..height {
         for x in 0..width {
-            match &board[x][y].ship {
-                Some(cell) => print!(" {} ", cell.borrow_mut().shipType.symbol()),
+            match &board[y][x].ship {
+                Some(cell) => print!(" {} ", cell.borrow_mut().ship_type.symbol()),
                 None => print!(" 0 ")
             }
         }

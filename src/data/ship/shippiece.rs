@@ -4,9 +4,9 @@ use crate::data::coordinates::statecoord::StateCoord;
 
 #[derive(Clone)]
 pub struct ShipPiece {
-    pub shipType: ShipType,
+    pub ship_type: ShipType,
     pub coords: Vec<StateCoord>,
-    pub reportedHitCoords: Vec<Coord>
+    pub reported_hit_coords: Vec<Coord>
 }
 
 impl ShipPiece {

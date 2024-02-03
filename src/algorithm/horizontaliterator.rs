@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::data::coordinates::heatmapcoord::HeatmapCoord;
+use crate::data::coordinates::{coord::Coord, heatmapcoord::HeatmapCoord};
 
 pub struct HorizontalIterator {
     coord: Rc<HeatmapCoord>,
@@ -13,3 +13,15 @@ pub struct HorizontalIterator {
     justShotCoords: Vec<HeatmapCoord>
 }
 
+impl HorizontalIterator {
+    pub fn new() {
+
+    }
+
+    pub fn update_hits(&self) {
+    }
+
+    pub fn get_priority_shots(&self) -> Vec<Coord> {
+        Vec::new()
+    }
+}

@@ -1,5 +1,6 @@
+#[derive(Clone)]
 pub struct HeatmapCoord {
-    x: u32,
-    y: u32,
-    heat: u32,
+    pub x: u32,
+    pub y: u32,
+    pub heat: u32,
 }

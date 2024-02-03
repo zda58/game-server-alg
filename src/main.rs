@@ -7,21 +7,21 @@ use data::ship::{shippiece, shiptype::ShipType};
 mod dealer;
 use dealer::{Dealer};
 mod player;
-use player::algorithmplayer::{generate_algorithm_player, AlgorithmPlayer};
+use player::algorithmplayer::{AlgorithmPlayer};
 
 fn main() {
     let mut specs: HashMap<ShipType, u32> = HashMap::from ([
-        (ShipType::SUBMARINE, 3),
-        (ShipType::DESTROYER, 3),
-        (ShipType::BATTLESHIP, 3),
-        (ShipType::CARRIER, 3)
+        (ShipType::Submarine, 3),
+        (ShipType::Destroyer, 3),
+        (ShipType::Battleship, 3),
+        (ShipType::Carrier, 3)
     ]);
     let width = 15;
     let height = 15;
     let player1 = 
-    generate_algorithm_player("player1".to_string(), &specs, width, height);
+    AlgorithmPlayer::new("player1".to_string(), &specs, height, width);
     let player2 = 
-    generate_algorithm_player("player2".to_string(), &specs, width, height);
+    AlgorithmPlayer::new("player2".to_string(), &specs, height, width);
     let dealer = Dealer {
         player1: player1,
         player2: player2
