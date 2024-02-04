@@ -22,7 +22,7 @@ fn main() {
     AlgorithmPlayer::new("player1".to_string(), &specs, height, width);
     let player2 = 
     AlgorithmPlayer::new("player2".to_string(), &specs, height, width);
-    let dealer = Dealer {
+    let mut dealer = Dealer {
         player1: player1,
         player2: player2
     };

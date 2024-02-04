@@ -29,13 +29,15 @@ impl RandomBoard {
                 for i in 0..item.1.clone() as usize {
                     let rand_coords: Vec<StateCoord>;
                     if rand.gen_bool(0.5) {
-                        rand_coords = Self::generate_horizontal_coords(&mut board, shiptype.len());
+                        rand_coords = Self::
+                            generate_horizontal_coords(&mut board, shiptype.len());
                     } else {
                         rand_coords = Self::generate_vertical_coords(&mut board, shiptype.len());
                     }
                     let ship: ShipPiece = ShipPiece {
                         ship_type: shiptype,
                         coords: rand_coords.clone(),
+                        destroyed_coords: Vec::new(),
                         reported_hit_coords: Vec::new()
                     };
 

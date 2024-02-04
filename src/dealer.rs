@@ -12,7 +12,7 @@ pub struct Dealer {
 }
 
 impl Dealer {
-    pub fn run(&self) {
+    pub fn run(&mut self) {
         let mut count: u32 = 0;
 
         let mut ships: HashMap<ShipType, u32> = HashMap::from ([
@@ -28,7 +28,7 @@ impl Dealer {
         //let player1Ships: Vec<ShipPiece> = self.player1.setup();
         let game_state = GameState::Ongoing;
         
-        while game_state != GameState::Ongoing {
+        while game_state == GameState::Ongoing {
             println!("loop count: {}", count);
             let p1shots: Vec<Coord> = self.player1.take_shots();
             let p2shots : Vec<Coord> = self.player2.take_shots();
@@ -51,7 +51,7 @@ impl Dealer {
             GameState::Draw => println!("Draw game!"),
             GameState::P1Win => println!("Player 1 wins!"),
             GameState::P2Win => println!("Player 2 wins!"),
-            _ => ()
+            _ => (println!("wwww"))
         }
         
     }

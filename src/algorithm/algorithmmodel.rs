@@ -11,9 +11,9 @@ pub struct AlgorithmModel {
     vertical_iterators: Vec<VerticalIterator>,
     priority_coords: Vec<Coord>,
     remaining_coords: Vec<Rc<RefCell<HeatmapCoord>>>,
-    shot_coords: Vec<Coord>,
+    shot_coords: Rc<RefCell<Vec<Coord>>>,
     missed_coords: Vec<Coord>,
-    hit_coords: Vec<Coord>,
+    hit_coords: Rc<RefCell<Vec<Coord>>>,
     just_shot_coords: Vec<Coord>
 }
 
@@ -29,16 +29,16 @@ impl AlgorithmModel {
         let horizontal_iterators: Vec<HorizontalIterator> = Vec::new();
         let vertical_iterators: Vec<VerticalIterator> = Vec::new();
         let priority_coords: Vec<Coord> = Vec::new();
+        println!("height{} width{}", height, width);
         let mut remaining_coords: Vec<Rc<RefCell<HeatmapCoord>>> = Vec::with_capacity(height * width);
         for y in 0..height {
             for x in 0..width {
-                let idx = y * width + x;
-                remaining_coords[idx] = Rc::clone(&other_board_heat_map[y][x]);
+                remaining_coords.push(Rc::clone(&other_board_heat_map[y][x]));
             }
         }
-        let shot_coords: Vec<Coord> = Vec::new();
+        let shot_coords: Rc<RefCell<Vec<Coord>>> = Rc::new(RefCell::new(Vec::new()));
         let missed_coords: Vec<Coord> = Vec::new();
-        let hit_coords: Vec<Coord> = Vec::new();
+        let hit_coords: Rc<RefCell<Vec<Coord>>> = Rc::new(RefCell::new(Vec::new()));
         let just_shot_coords: Vec<Coord> = Vec::new();
 
         AlgorithmModel{
@@ -106,16 +106,16 @@ impl AlgorithmModel {
 
     pub fn record_successful_hits(&mut self, hits: Vec<Coord>) {
         for coord in hits.iter() {
-            self.hit_coords.push(coord.clone());
+            self.hit_coords.borrow_mut().push(coord.clone());
         }
-        for coord in self.shot_coords.iter() {
-            if !self.hit_coords.contains(coord) && !self.missed_coords.contains(coord) {
+        for coord in self.shot_coords.borrow().iter() {
+            if !self.hit_coords.borrow_mut().contains(coord) && !self.missed_coords.contains(coord) {
                 self.missed_coords.push(coord.clone());
             }
         }
         self.create_new_iterators(hits);
         self.priority_coords.clear();
-        for iterator in self.vertical_iterators.iter() {
+        for iterator in self.vertical_iterators.iter_mut() {
             iterator.update_hits();
             for coord in iterator.get_priority_shots() {
                 if self.priority_coords.contains(&coord) {
@@ -123,7 +123,7 @@ impl AlgorithmModel {
                 }
             }
         }
-        for iterator in self.horizontal_iterators.iter() {
+        for iterator in self.horizontal_iterators.iter_mut() {
             iterator.update_hits();
             for coord in iterator.get_priority_shots() {
                 if self.priority_coords.contains(&coord) {
@@ -134,7 +134,43 @@ impl AlgorithmModel {
     }
 
     fn create_new_iterators(&mut self, shots_that_hit_opponent_ships: Vec<Coord>) {
-        for coord in shots_that_hit_opponent_ships {
+        for coord in shots_that_hit_opponent_ships.iter() {
+            let hit_coord = &self.other_board_heat_map[coord.x as usize][coord.y as usize];
+            let mut already_iterator = false;
+            let mut close_vertical = false;
+            let mut close_horizontal = false;
+            for iterator in self.vertical_iterators.iter_mut() {
+                already_iterator = iterator.has_coord(Coord{x: hit_coord.borrow().x, y: hit_coord.borrow().y}) || already_iterator;
+                close_vertical = iterator.is_coord_close(Coord{x: hit_coord.borrow().x, y: hit_coord.borrow().y}) || close_horizontal;
+                iterator.update_hits();
+            }
+            for iterator in self.horizontal_iterators.iter_mut() {
+                already_iterator = iterator.has_coord(Coord{x: hit_coord.borrow().x, y: hit_coord.borrow().y}) || already_iterator;
+                close_vertical = iterator.is_coord_close(Coord{x: hit_coord.borrow().x, y: hit_coord.borrow().y}) || close_horizontal;
+                iterator.update_hits();
+            }
+            if !already_iterator {
+                if (close_vertical && close_horizontal) || (!close_vertical && !close_horizontal) {
+                    let horizontal_iter = HorizontalIterator::new(
+                        Rc::clone(&hit_coord), self.other_board_heat_map.clone(), 
+                        Rc::clone(&self.shot_coords), Rc::clone(&self.hit_coords));
+                    let vertical_iter = VerticalIterator::new(
+                        Rc::clone(&hit_coord), self.other_board_heat_map.clone(), 
+                        Rc::clone(&self.shot_coords), Rc::clone(&self.hit_coords));
+                    self.horizontal_iterators.push(horizontal_iter);
+                    self.vertical_iterators.push(vertical_iter);
+                } else if close_vertical {
+                    let vertical_iter = VerticalIterator::new(
+                        Rc::clone(&hit_coord), self.other_board_heat_map.clone(), 
+                        Rc::clone(&self.shot_coords), Rc::clone(&self.hit_coords));
+                    self.vertical_iterators.push(vertical_iter);
+                } else {
+                    let horizontal_iter = HorizontalIterator::new(
+                        Rc::clone(&hit_coord), self.other_board_heat_map.clone(), 
+                        Rc::clone(&self.shot_coords), Rc::clone(&self.hit_coords));
+                    self.horizontal_iterators.push(horizontal_iter);
+                }
+            }
         }
     }
 
@@ -149,7 +185,7 @@ impl AlgorithmModel {
             self.remaining_coords
             .sort_by(|a, b| a.borrow_mut().heat.clone().cmp(&b.borrow_mut().heat));
             let coord = Coord{x: self.remaining_coords[0].borrow().x, y: self.remaining_coords[0].borrow().x};
-            self.shot_coords.push(coord.clone());
+            self.shot_coords.borrow_mut().push(coord.clone());
             self.just_shot_coords.push(coord.clone());
             shots.push(coord.clone());
             self.remaining_coords.remove(0);

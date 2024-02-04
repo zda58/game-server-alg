@@ -2,6 +2,8 @@ use std::{borrow::Borrow, cell::RefCell, rc::Rc};
 
 use crate::data::ship::shippiece::ShipPiece;
 
+use super::coord::Coord;
+
 #[derive(Clone)]
 pub struct OwnCoord {
     pub x: u32,
@@ -14,7 +16,8 @@ impl OwnCoord {
     pub fn get_shot(&mut self) {
         self.shot = true;
         match &self.ship {
-            Some(ship) => ship.borrow_mut().get_shot(self.x, self.y),
+            Some(ship) => 
+                ship.borrow_mut().get_shot(Coord {x: self.x, y: self.y}),
             _ => ()
         }
     }
