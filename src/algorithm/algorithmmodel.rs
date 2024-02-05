@@ -25,7 +25,13 @@ impl AlgorithmModel {
                 possible_other_ships.push(ship_type.clone());
             }
         }
-        let other_board_heat_map: Vec<Vec<Rc<RefCell<HeatmapCoord>>>> = vec![vec![Rc::new(RefCell::new(HeatmapCoord{x: 0, y: 0, heat: 0})); width]; height];
+        let mut other_board_heat_map: Vec<Vec<Rc<RefCell<HeatmapCoord>>>> = Vec::with_capacity(height);
+        for y in 0..height {
+            other_board_heat_map.push(Vec::with_capacity(width));
+            for x in 0..width {
+                other_board_heat_map[y].push(Rc::new(RefCell::new(HeatmapCoord{x: x as u32, y: y as u32, heat: 0})));
+            }
+        }
         let horizontal_iterators: Vec<HorizontalIterator> = Vec::new();
         let vertical_iterators: Vec<VerticalIterator> = Vec::new();
         let priority_coords: Vec<Coord> = Vec::new();
@@ -57,30 +63,34 @@ impl AlgorithmModel {
 
     fn update_heat_map(&mut self) {
         self.reset_heat_map();
-        let mut list: Vec<Coord> = Vec::new();
-        for ship_type in self.possible_other_ships.iter() {
+        println!("ship size: {}", self.possible_other_ships.len());
+        let ships = self.possible_other_ships.clone();
+        for ship_type in &ships {
             for y in 0..=self.other_board_heat_map.len() - ship_type.len() {
                 for x in 0..self.other_board_heat_map[0].len() {
+                    let mut list: Vec<Coord> = Vec::new();
                     for i in 0..ship_type.len() {
                         list.push(Coord{x: x as u32, y: (y + i) as u32});
                     }
+                    self.update_valid_position_coords(list);
                 }
             }
         }
-        self.update_valid_position_coords(list);
 
-        let mut list: Vec<Coord> = Vec::new();
-        for ship_type in self.possible_other_ships.iter() {
+        println!("coord size: {}", self.possible_other_ships.len());
+        let ships = self.possible_other_ships.clone();
+        for ship_type in &ships {
             for y in 0..self.other_board_heat_map.len() {
                 for x in 0..=self.other_board_heat_map[0].len() - ship_type.len() {
+                    let mut list: Vec<Coord> = Vec::new();
                     for i in 0..ship_type.len() {
                         list.push(Coord{x: (x + i) as u32, y: y as u32});
                     }
+                    self.update_valid_position_coords(list);
                 }
             }
         }
-        self.update_valid_position_coords(list);
-        
+
         for coord in self.priority_coords.iter() {
             self.other_board_heat_map[coord.y as usize][coord.x as usize].borrow_mut().heat += 5000;
         }
@@ -89,7 +99,7 @@ impl AlgorithmModel {
 
     fn update_valid_position_coords(&mut self, coords: Vec<Coord>) {
         for coord in coords.iter() {
-            if self.missed_coords.contains(&coord) {
+            if self.missed_coords.contains(&coord) || self.just_shot_coords.contains(&coord) {
                 return;
             }
         }
@@ -180,18 +190,38 @@ impl AlgorithmModel {
             num_shots = self.remaining_coords.len() as u32
         }
 
-        for _ in 0..num_shots {
+        for i in 0..num_shots {
+            for coord in self.shot_coords.borrow().iter() {
+                println!("currnet shot coords: {}, {}", coord.x, coord.y);
+            }
+            println!("prior update shot {}!!!!!!!", i);
             self.update_heat_map();
+            println!("after update shot {}!!!!!!!", i);
+            Self::print_heat_map(self);
             self.remaining_coords
-            .sort_by(|a, b| a.borrow_mut().heat.clone().cmp(&b.borrow_mut().heat));
+            .sort_by(|a, b| b.borrow().heat.clone().cmp(&a.borrow().heat));
             let coord = Coord{x: self.remaining_coords[0].borrow().x, y: self.remaining_coords[0].borrow().x};
             self.shot_coords.borrow_mut().push(coord.clone());
             self.just_shot_coords.push(coord.clone());
             shots.push(coord.clone());
             self.remaining_coords.remove(0);
+            println!("adding coord: {}, {}", coord.x, coord.y);
         }
         self.just_shot_coords.clear();
         self.update_heat_map();
+        for coord in shots.iter() {
+            println!("shot coord: {}, {}", coord.x, coord.y);
+        }
         shots
+    }
+
+    fn print_heat_map(&self) {
+        for y in 0..self.other_board_heat_map.len() {
+            for x in 0..self.other_board_heat_map[0].len() {
+                let heat = self.other_board_heat_map[y][x].borrow().heat;
+                print!(" {} ", heat);
+            }
+            println!();
+        }
     }
 }

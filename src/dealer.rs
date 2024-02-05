@@ -29,6 +29,11 @@ impl Dealer {
         let game_state = GameState::Ongoing;
         
         while game_state == GameState::Ongoing {
+            self.player1.draw_own_board();
+            self.player2.draw_own_board();
+            if count == 20 {
+                break;
+            }
             println!("loop count: {}", count);
             let p1shots: Vec<Coord> = self.player1.take_shots();
             let p2shots : Vec<Coord> = self.player2.take_shots();
@@ -37,7 +42,6 @@ impl Dealer {
             let p2hits: Vec<Coord> = self.player1.report_damage(p2shots);
             self.player1.record_successful_hits(p1hits);
             self.player2.record_successful_hits(p2hits);
-
             if self.player1.get_ship_count() == 0 && self.player2.get_ship_count() == 0 {
                 game_state == GameState::Draw;
             } else if self.player1.get_ship_count() == 0 {
@@ -64,7 +68,7 @@ fn print_board(board: &Vec<Vec<OwnCoord>>) {
         for x in 0..width {
             match &board[y][x].ship {
                 Some(cell) => print!(" {} ", cell.borrow_mut().ship_type.symbol()),
-                None => print!(" 0 ")
+                None => print!(" n ")
             }
         }
         println!()

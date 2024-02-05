@@ -18,7 +18,6 @@ impl ShipPiece {
             self.destroyed_coords.push(coord.clone());
             self.reported_hit_coords.push(coord);
         }
-
     }
 
     pub fn report_coords(&mut self) -> Vec<Coord> {
@@ -30,5 +29,9 @@ impl ShipPiece {
 
     pub fn is_destroyed(&self) -> bool {
         self.coords.len() == 0
+    }
+
+    pub fn symbol(&self) -> String {
+        format!("{}", self.ship_type.symbol())
     }
 }

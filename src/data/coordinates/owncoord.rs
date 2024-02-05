@@ -14,6 +14,7 @@ pub struct OwnCoord {
 
 impl OwnCoord {
     pub fn get_shot(&mut self) {
+        println!("ship shot!!");
         self.shot = true;
         match &self.ship {
             Some(ship) => 
@@ -29,8 +30,21 @@ impl OwnCoord {
         }
     }
 
-    pub fn set_ship(&mut self, ship: Rc<RefCell<ShipPiece>>) {
-        self.ship = Some(ship);
+    pub fn symbol(&self) -> String {
+        if self.shot {
+            return "X".to_string();
+        }
+        match self.ship {
+            Some(_) => {
+                let rc: Rc<RefCell<ShipPiece>> = Rc::clone(&self.ship.as_ref().unwrap());
+                let refcell = <Rc<RefCell<ShipPiece>> as std::borrow::Borrow<RefCell<ShipPiece>>>::borrow(&rc);
+                format!(
+                    "{}",
+                    refcell.borrow().symbol()
+                )
+            },
+            None => ".".to_string(),
+        }
     }
 }
 

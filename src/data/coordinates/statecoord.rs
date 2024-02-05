@@ -18,9 +18,9 @@ impl StateCoord {
 
     pub fn symbol(&self) -> String {
         match self.state {
-            CoordState::Normal => " . ".to_string(),
-            CoordState::Shot => " o ".to_string(),
-            CoordState::Hit => " x ".to_string()
+            CoordState::Normal => ".".to_string(),
+            CoordState::Shot => "o".to_string(),
+            CoordState::Hit => "x".to_string()
         }
     }
 }
