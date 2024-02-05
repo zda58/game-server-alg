@@ -74,9 +74,11 @@ impl AlgorithmPlayer {
     }
 
     pub fn get_ship_count(&self) -> u32 {
-        self.ships.iter()
+        let count = self.ships.iter()
         .filter(|rc| rc.borrow().is_destroyed() == false)
-        .count() as u32
+        .count() as u32;
+        println!("ship count: {}", count);
+        count
     }
 
     pub fn draw_own_board(&self) {

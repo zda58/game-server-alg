@@ -26,13 +26,13 @@ impl Dealer {
         println!();
         print_board(&self.player2.own_board);
         //let player1Ships: Vec<ShipPiece> = self.player1.setup();
-        let game_state = GameState::Ongoing;
+        let mut game_state = GameState::Ongoing;
         
         while game_state == GameState::Ongoing {
             //self.player1.draw_own_board();
             //self.player2.draw_own_board();
             if count == 20 {
-                break;
+                //break;
             }
             println!("loop count: {}", count);
             let p1shots: Vec<Coord> = self.player1.take_shots();
@@ -43,11 +43,11 @@ impl Dealer {
             self.player1.record_successful_hits(p1hits);
             //self.player2.record_successful_hits(p2hits);
             if self.player1.get_ship_count() == 0 && self.player2.get_ship_count() == 0 {
-                game_state == GameState::Draw;
+                game_state = GameState::Draw;
             } else if self.player1.get_ship_count() == 0 {
-                game_state == GameState::P2Win;
+                game_state = GameState::P2Win;
             } else if self.player2.get_ship_count() == 0 {
-                game_state == GameState::P1Win;
+                game_state = GameState::P1Win;
             }
             count += 1;
         }
