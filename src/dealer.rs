@@ -29,19 +29,19 @@ impl Dealer {
         let game_state = GameState::Ongoing;
         
         while game_state == GameState::Ongoing {
-            self.player1.draw_own_board();
-            self.player2.draw_own_board();
+            //self.player1.draw_own_board();
+            //self.player2.draw_own_board();
             if count == 20 {
                 break;
             }
             println!("loop count: {}", count);
             let p1shots: Vec<Coord> = self.player1.take_shots();
-            let p2shots : Vec<Coord> = self.player2.take_shots();
+            //let p2shots : Vec<Coord> = self.player2.take_shots();
 
             let p1hits: Vec<Coord> = self.player2.report_damage(p1shots);
-            let p2hits: Vec<Coord> = self.player1.report_damage(p2shots);
+            //let p2hits: Vec<Coord> = self.player1.report_damage(p2shots);
             self.player1.record_successful_hits(p1hits);
-            self.player2.record_successful_hits(p2hits);
+            //self.player2.record_successful_hits(p2hits);
             if self.player1.get_ship_count() == 0 && self.player2.get_ship_count() == 0 {
                 game_state == GameState::Draw;
             } else if self.player1.get_ship_count() == 0 {

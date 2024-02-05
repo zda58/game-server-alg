@@ -139,7 +139,7 @@ impl HorizontalIterator {
         if self.coord.borrow().y == coord_y {
             match &self.left {
                 Some(coord) => {
-                    if coord.x - coord_x < 3 && coord.x - coord_x > 0 {
+                    if (coord.x as i32 - coord_x as i32) < 3 && (coord.x as i32 - coord_x as i32) > 0 {
                         return true;
                     }
                 },
@@ -147,7 +147,7 @@ impl HorizontalIterator {
             }
             match &self.right {
                 Some(coord) => {
-                    if coord_x - coord.x < 3 && coord_x - coord.x > 0 {
+                    if (coord_x as i32 - coord.x as i32) < 3 && (coord_x as i32 - coord.x as i32) > 0 {
                         return true;
                     }
                 },

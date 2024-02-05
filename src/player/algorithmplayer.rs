@@ -48,7 +48,6 @@ impl AlgorithmPlayer {
         let shots = self.model.take_shots(Self::get_ship_count(self));
         println!("{} taking shots!!", self.name);
         for shot in shots.iter() {
-            println!("shot: {} {}", shot.y, shot.x);
             self.other_board[shot.y as usize][shot.x as usize].shoot_at();
         }
         shots

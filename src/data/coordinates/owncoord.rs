@@ -14,7 +14,6 @@ pub struct OwnCoord {
 
 impl OwnCoord {
     pub fn get_shot(&mut self) {
-        println!("ship shot!!");
         self.shot = true;
         match &self.ship {
             Some(ship) => 

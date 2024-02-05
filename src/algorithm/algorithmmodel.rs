@@ -63,7 +63,6 @@ impl AlgorithmModel {
 
     fn update_heat_map(&mut self) {
         self.reset_heat_map();
-        println!("ship size: {}", self.possible_other_ships.len());
         let ships = self.possible_other_ships.clone();
         for ship_type in &ships {
             for y in 0..=self.other_board_heat_map.len() - ship_type.len() {
@@ -191,21 +190,20 @@ impl AlgorithmModel {
         }
 
         for i in 0..num_shots {
-            for coord in self.shot_coords.borrow().iter() {
-                println!("currnet shot coords: {}, {}", coord.x, coord.y);
-            }
-            println!("prior update shot {}!!!!!!!", i);
             self.update_heat_map();
-            println!("after update shot {}!!!!!!!", i);
-            Self::print_heat_map(self);
             self.remaining_coords
             .sort_by(|a, b| b.borrow().heat.clone().cmp(&a.borrow().heat));
-            let coord = Coord{x: self.remaining_coords[0].borrow().x, y: self.remaining_coords[0].borrow().x};
+        for coord in self.remaining_coords.iter() {
+            println!("remaining coord: {} {}", coord.borrow().x, coord.borrow().y);
+        }
+        let zerocoord = &self.remaining_coords[0];
+            let coord = Coord{x: zerocoord.borrow().x, y: zerocoord.borrow().y};
             self.shot_coords.borrow_mut().push(coord.clone());
             self.just_shot_coords.push(coord.clone());
             shots.push(coord.clone());
             self.remaining_coords.remove(0);
-            println!("adding coord: {}, {}", coord.x, coord.y);
+            println!("added coord: {} {}", coord.x, coord.y);
+            println!("remaining coord size: {}", self.remaining_coords.len());
         }
         self.just_shot_coords.clear();
         self.update_heat_map();

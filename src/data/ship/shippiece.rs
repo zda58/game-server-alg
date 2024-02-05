@@ -15,6 +15,7 @@ pub struct ShipPiece {
 impl ShipPiece {
     pub fn get_shot(&mut self, coord: Coord) {
         if !self.destroyed_coords.contains(&coord) {
+            println!("ship shot!");
             self.destroyed_coords.push(coord.clone());
             self.reported_hit_coords.push(coord);
         }

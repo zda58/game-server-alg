@@ -20,7 +20,7 @@ impl VerticalIterator {
             let y_coord = coord.borrow().y;
             let mut top: Option<Coord> = None;
             let mut botton: Option<Coord> = None;
-            if x_coord > 0 {
+            if y_coord > 0 {
                 let top_coord = Coord{x: x_coord, y: y_coord - 1};
                 let heat = board[(y_coord - 1) as usize][x_coord as usize].borrow().heat;
                 if heat > 0 && hit_coords.borrow().contains(&top_coord) {
@@ -28,7 +28,7 @@ impl VerticalIterator {
                     coords.push(top_coord);
                 }
             }
-            if x_coord < (board[0].len() - 1) as u32 {
+            if y_coord < (board.len() - 1) as u32 {
                 let top_coord = Coord{x: x_coord, y: y_coord + 1};
                 let heat = board[(y_coord + 1) as usize][x_coord as usize].borrow().heat;
                 if heat > 0 && hit_coords.borrow().contains(&top_coord) {
@@ -139,7 +139,7 @@ impl VerticalIterator {
         if self.coord.borrow().x == coord_x {
             match &self.top {
                 Some(coord) => {
-                    if coord.y - coord_y < 3 && coord.y - coord_y > 0 {
+                    if (coord.y as i32 - coord_y as i32) < 3 && (coord.y as i32 - coord_y as i32) > 0 {
                         return true;                        
                     }
                 },
@@ -147,7 +147,7 @@ impl VerticalIterator {
             }
             match &self.bottom {
                 Some(coord) => {
-                    if coord_y - coord.y < 3 && coord_y - coord.y > 0 {
+                    if (coord_y as i32 - coord.y as i32) < 3 && (coord_y as i32 - coord.y as i32) > 0 {
                         return true;
                     }
                 },
