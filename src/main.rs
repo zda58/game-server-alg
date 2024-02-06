@@ -2,7 +2,7 @@ mod algorithm;
 mod data;
 use std::collections::HashMap;
 
-use data::ship::{shippiece, shiptype::ShipType};
+use data::{game::GameState, ship::{shippiece, shiptype::ShipType}};
 
 mod dealer;
 use dealer::{Dealer};
@@ -19,7 +19,10 @@ fn main() {
     let width = 15;
     let height = 15;
 
-    for _ in 0..1000 {
+    let mut p1wins = 0;
+    let mut p2wins = 0;
+    let mut draws = 0;
+    for i in 1..=1000 {
         let player1 = 
         AlgorithmPlayer::new("player1".to_string(), &specs, height, width);
         let player2 = 
@@ -28,6 +31,22 @@ fn main() {
             player1: player1,
             player2: player2
         };
-        dealer.run();
+        println!("{}", i);
+        match dealer.run() {
+            GameState::P1Win => {
+                p1wins += 1;
+                println!("p1 wins");
+            },
+            GameState::P2Win => {
+                p2wins += 1;
+                println!("p2 wins");
+            },
+            GameState::Draw => {
+                draws += 1;
+                println!("draw");
+            },
+            _ => (),
+        }
     }
+    println!("p1: {}, p2: {}, draws: {}", p1wins, p2wins, draws);
 }

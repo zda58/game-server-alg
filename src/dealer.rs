@@ -12,7 +12,7 @@ pub struct Dealer {
 }
 
 impl Dealer {
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> GameState {
         let mut count: u32 = 0;
 
         let mut ships: HashMap<ShipType, u32> = HashMap::from ([
@@ -40,13 +40,7 @@ impl Dealer {
                 game_state = GameState::P1Win;
             }
         }
-        match game_state {
-            GameState::Draw => println!("Draw game!"),
-            GameState::P1Win => println!("Player 1 wins!"),
-            GameState::P2Win => println!("Player 2 wins!"),
-            _ => println!("some error occured"),
-        }
-        
+        game_state
     }
 }
 
