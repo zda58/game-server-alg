@@ -108,7 +108,7 @@ impl HorizontalIterator {
                         self.coords.push(coord.clone());
                         let coord_y = coord.y;
                         let coord_x = coord.x;
-                        if coord_x > 0 {
+                        if coord_x < (self.board[0].len() - 1) as u32 {
                             let right_coord = Coord{x: coord_x + 1, y: coord_y};
                             let heat = self.board[coord_y as usize][(coord_x + 1) as usize].borrow().heat;
                             if heat > 0 && !self.hit_coords.borrow().contains(&right_coord) {

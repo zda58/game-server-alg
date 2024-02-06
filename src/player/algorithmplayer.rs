@@ -46,7 +46,6 @@ impl AlgorithmPlayer {
 
     pub fn take_shots(&mut self) -> Vec<Coord> {
         let shots = self.model.take_shots(Self::get_ship_count(self));
-        println!("{} taking shots!!", self.name);
         for shot in shots.iter() {
             self.other_board[shot.y as usize][shot.x as usize].shoot_at();
         }
@@ -77,7 +76,6 @@ impl AlgorithmPlayer {
         let count = self.ships.iter()
         .filter(|rc| rc.borrow().is_destroyed() == false)
         .count() as u32;
-        println!("ship count: {}", count);
         count
     }
 
@@ -86,7 +84,7 @@ impl AlgorithmPlayer {
         println!("{} board", self.name);
         for y in 0..self.own_board.len() {
             for x in 0..self.own_board[0].len() {
-                print!(" i{} ", self.own_board[y][x].symbol());
+                print!(" {} ", self.own_board[y][x].symbol());
             }
             println!();
         }

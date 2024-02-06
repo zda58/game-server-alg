@@ -35,7 +35,6 @@ impl AlgorithmModel {
         let horizontal_iterators: Vec<HorizontalIterator> = Vec::new();
         let vertical_iterators: Vec<VerticalIterator> = Vec::new();
         let priority_coords: Vec<Coord> = Vec::new();
-        println!("height{} width{}", height, width);
         let mut remaining_coords: Vec<Rc<RefCell<HeatmapCoord>>> = Vec::with_capacity(height * width);
         for y in 0..height {
             for x in 0..width {
@@ -75,8 +74,6 @@ impl AlgorithmModel {
                 }
             }
         }
-
-        println!("coord size: {}", self.possible_other_ships.len());
         let ships = self.possible_other_ships.clone();
         for ship_type in &ships {
             for y in 0..self.other_board_heat_map.len() {
@@ -193,22 +190,16 @@ impl AlgorithmModel {
             self.update_heat_map();
             self.remaining_coords
             .sort_by(|a, b| b.borrow().heat.clone().cmp(&a.borrow().heat));
-        for coord in self.remaining_coords.iter() {
-            println!("remaining coord: {} {}", coord.borrow().x, coord.borrow().y);
-        }
-        let zerocoord = &self.remaining_coords[0];
+            let zerocoord = &self.remaining_coords[0];
             let coord = Coord{x: zerocoord.borrow().x, y: zerocoord.borrow().y};
             self.shot_coords.borrow_mut().push(coord.clone());
             self.just_shot_coords.push(coord.clone());
             shots.push(coord.clone());
             self.remaining_coords.remove(0);
-            println!("added coord: {} {}", coord.x, coord.y);
-            println!("remaining coord size: {}", self.remaining_coords.len());
         }
         self.just_shot_coords.clear();
         self.update_heat_map();
         for coord in shots.iter() {
-            println!("shot coord: {}, {}", coord.x, coord.y);
         }
         shots
     }

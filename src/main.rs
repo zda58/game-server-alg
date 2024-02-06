@@ -18,13 +18,16 @@ fn main() {
     ]);
     let width = 15;
     let height = 15;
-    let player1 = 
-    AlgorithmPlayer::new("player1".to_string(), &specs, height, width);
-    let player2 = 
-    AlgorithmPlayer::new("player2".to_string(), &specs, height, width);
-    let mut dealer = Dealer {
-        player1: player1,
-        player2: player2
-    };
-    dealer.run();
+
+    for _ in 0..1000 {
+        let player1 = 
+        AlgorithmPlayer::new("player1".to_string(), &specs, height, width);
+        let player2 = 
+        AlgorithmPlayer::new("player2".to_string(), &specs, height, width);
+        let mut dealer = Dealer {
+            player1: player1,
+            player2: player2
+        };
+        dealer.run();
+    }
 }

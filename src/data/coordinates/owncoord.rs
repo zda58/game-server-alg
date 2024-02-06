@@ -16,8 +16,9 @@ impl OwnCoord {
     pub fn get_shot(&mut self) {
         self.shot = true;
         match &self.ship {
-            Some(ship) => 
-                ship.borrow_mut().get_shot(Coord {x: self.x, y: self.y}),
+            Some(ship) => {
+                ship.borrow_mut().get_shot(Coord {x: self.x, y: self.y})
+            },
             _ => ()
         }
     }
