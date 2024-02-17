@@ -2,18 +2,20 @@ use std::io::{self, BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use game::init_game;
 use local_ip_address::local_ip;
 use serde_json::{Deserializer, Serializer};
 use serde_json::Result;
 
 
 mod json;
-mod game;
+mod gamestate;
 mod data;
+mod game;
 
 fn main() {
     let mut streams: (TcpStream, TcpStream) = init_connections();
-    game_loop(streams.0, streams.1);
+    init_game(streams.0, streams.1);
 }
 
 fn init_connections() -> (TcpStream, TcpStream) {
@@ -42,10 +44,6 @@ fn init_connections() -> (TcpStream, TcpStream) {
         };
     }
     (first_stream_option.unwrap(), second_stream_option.unwrap())
-}
-
-fn game_loop(streams: TcpStream, stream2: TcpStream) {
-    
 }
 /*
     let player1: Player = Player {
