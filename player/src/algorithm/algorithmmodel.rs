@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use crate::data::{coordinates::{coord::Coord, heatmapcoord::HeatmapCoord}, ship::{shippiece::ShipPiece, shiptype::ShipType}};
+use crate::data::{coordinates::{coord::Coord, heatmapcoord::HeatmapCoord}, ship::shippiece::ShipType};
 
 use super::{horizontaliterator::HorizontalIterator, verticaliterator::VerticalIterator};
 
@@ -18,7 +18,7 @@ pub struct AlgorithmModel {
 }
 
 impl AlgorithmModel {
-    pub fn new(spec: &HashMap<ShipType, u32>, height: usize, width: usize) -> AlgorithmModel {
+    pub fn new(spec: &HashMap<ShipType, u32>, height: usize, width: usize) -> Self {
         let mut possible_other_ships: Vec<ShipType> = Vec::new();
         for (ship_type, count) in spec {
             for i in 0..count.clone() {
@@ -46,7 +46,7 @@ impl AlgorithmModel {
         let hit_coords: Rc<RefCell<Vec<Coord>>> = Rc::new(RefCell::new(Vec::new()));
         let just_shot_coords: Vec<Coord> = Vec::new();
 
-        AlgorithmModel{
+        Self {
             possible_other_ships: possible_other_ships,
             other_board_heat_map: other_board_heat_map,
             horizontal_iterators: horizontal_iterators,

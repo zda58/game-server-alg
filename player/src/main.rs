@@ -1,13 +1,13 @@
 mod algorithm;
 mod data;
-use std::collections::HashMap;
-
-use data::{game::GameState, ship::{shippiece, shiptype::ShipType}};
-
 mod dealer;
-use dealer::{Dealer};
 mod player;
+
+use std::collections::HashMap;
+use data::{game::GameState};
 use player::algorithmplayer::{AlgorithmPlayer};
+use dealer::{Dealer};
+use data::ship::shippiece::ShipType;
 
 fn main() {
     let mut specs: HashMap<ShipType, u32> = HashMap::from ([

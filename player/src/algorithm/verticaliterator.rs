@@ -14,39 +14,39 @@ pub struct VerticalIterator {
 
 impl VerticalIterator {
     pub fn new(coord: Rc<RefCell<HeatmapCoord>>, board: Vec<Vec<Rc<RefCell<HeatmapCoord>>>>, 
-        shot_coords: Rc<RefCell<Vec<Coord>>>, hit_coords: Rc<RefCell<Vec<Coord>>>) -> VerticalIterator {
-            let mut coords: Vec<Coord> = Vec::new();
-            let x_coord = coord.borrow().x;
-            let y_coord = coord.borrow().y;
-            let mut top: Option<Coord> = None;
-            let mut botton: Option<Coord> = None;
-            if y_coord > 0 {
-                let top_coord = Coord{x: x_coord, y: y_coord - 1};
-                let heat = board[(y_coord - 1) as usize][x_coord as usize].borrow().heat;
-                if heat > 0 && hit_coords.borrow().contains(&top_coord) {
-                    top = Some(top_coord.clone());
-                    coords.push(top_coord);
-                }
+    shot_coords: Rc<RefCell<Vec<Coord>>>, hit_coords: Rc<RefCell<Vec<Coord>>>) -> Self {
+        let mut coords: Vec<Coord> = Vec::new();
+        let x_coord = coord.borrow().x;
+        let y_coord = coord.borrow().y;
+        let mut top: Option<Coord> = None;
+        let mut botton: Option<Coord> = None;
+        if y_coord > 0 {
+            let top_coord = Coord{x: x_coord, y: y_coord - 1};
+            let heat = board[(y_coord - 1) as usize][x_coord as usize].borrow().heat;
+            if heat > 0 && hit_coords.borrow().contains(&top_coord) {
+                top = Some(top_coord.clone());
+                coords.push(top_coord);
             }
-            if y_coord < (board.len() - 1) as u32 {
-                let top_coord = Coord{x: x_coord, y: y_coord + 1};
-                let heat = board[(y_coord + 1) as usize][x_coord as usize].borrow().heat;
-                if heat > 0 && hit_coords.borrow().contains(&top_coord) {
-                    botton = Some(top_coord.clone());
-                    coords.push(top_coord);
-                }
+        }
+        if y_coord < (board.len() - 1) as u32 {
+            let top_coord = Coord{x: x_coord, y: y_coord + 1};
+            let heat = board[(y_coord + 1) as usize][x_coord as usize].borrow().heat;
+            if heat > 0 && hit_coords.borrow().contains(&top_coord) {
+                botton = Some(top_coord.clone());
+                coords.push(top_coord);
             }
-            coords.push(Coord{x: coord.borrow().x, y: coord.borrow().y});
-            VerticalIterator {
-                coord: coord,
-                board: board,
-                coords: coords,
-                shot_coords: shot_coords,
-                hit_coords: hit_coords,
-                top,
-                bottom: botton, 
+        }
+        coords.push(Coord{x: coord.borrow().x, y: coord.borrow().y});
+        Self {
+            coord: coord,
+            board: board,
+            coords: coords,
+            shot_coords: shot_coords,
+            hit_coords: hit_coords,
+            top,
+            bottom: botton, 
 
-            }
+        }
     }
 
     pub fn get_priority_shots(&self) -> Vec<Coord> {

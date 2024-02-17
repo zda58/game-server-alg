@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 use crate::data::coordinates::coord::Coord;
 use crate::data::coordinates::owncoord::OwnCoord;
-use crate::data::ship::shippiece::ShipPiece;
+use crate::data::ship::shippiece::{ShipPiece, ShipType};
 use crate::player::algorithmplayer::{AlgorithmPlayer};
-use crate::data::ship::shiptype::{ShipType};
 use crate::data::game::GameState;
 
 pub struct Dealer {

@@ -1,5 +1,3 @@
-use super::coordstate::CoordState;
-
 #[derive(Clone)]
 pub struct StateCoord {
     pub x: u32,
@@ -23,4 +21,11 @@ impl StateCoord {
             CoordState::Hit => "x".to_string()
         }
     }
+}
+
+#[derive(Clone)]
+pub enum CoordState {
+    Normal,
+    Shot,
+    Hit
 }

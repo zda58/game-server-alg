@@ -14,39 +14,39 @@ pub struct HorizontalIterator {
 
 impl HorizontalIterator {
     pub fn new(coord: Rc<RefCell<HeatmapCoord>>, board: Vec<Vec<Rc<RefCell<HeatmapCoord>>>>, 
-        shot_coords: Rc<RefCell<Vec<Coord>>>, hit_coords: Rc<RefCell<Vec<Coord>>>) -> HorizontalIterator {
-            let mut coords: Vec<Coord> = Vec::new();
-            let x_coord = coord.borrow().x;
-            let y_coord = coord.borrow().y;
-            let mut left: Option<Coord> = None;
-            let mut right: Option<Coord> = None;
-            if x_coord > 0 {
-                let left_coord = Coord{x: x_coord - 1, y: y_coord};
-                let heat = board[y_coord as usize][(x_coord - 1) as usize].borrow().heat;
-                if heat > 0 && hit_coords.borrow().contains(&left_coord) {
-                    left = Some(left_coord.clone());
-                    coords.push(left_coord);
-                }
+    shot_coords: Rc<RefCell<Vec<Coord>>>, hit_coords: Rc<RefCell<Vec<Coord>>>) -> Self {
+        let mut coords: Vec<Coord> = Vec::new();
+        let x_coord = coord.borrow().x;
+        let y_coord = coord.borrow().y;
+        let mut left: Option<Coord> = None;
+        let mut right: Option<Coord> = None;
+        if x_coord > 0 {
+            let left_coord = Coord{x: x_coord - 1, y: y_coord};
+            let heat = board[y_coord as usize][(x_coord - 1) as usize].borrow().heat;
+            if heat > 0 && hit_coords.borrow().contains(&left_coord) {
+                left = Some(left_coord.clone());
+                coords.push(left_coord);
             }
-            if x_coord < (board[0].len() - 1) as u32 {
-                let right_coord = Coord{x: x_coord + 1, y: y_coord};
-                let heat = board[y_coord as usize][(x_coord + 1) as usize].borrow().heat;
-                if heat > 0 && hit_coords.borrow().contains(&right_coord) {
-                    right = Some(right_coord.clone());
-                    coords.push(right_coord);
-                }
+        }
+        if x_coord < (board[0].len() - 1) as u32 {
+            let right_coord = Coord{x: x_coord + 1, y: y_coord};
+            let heat = board[y_coord as usize][(x_coord + 1) as usize].borrow().heat;
+            if heat > 0 && hit_coords.borrow().contains(&right_coord) {
+                right = Some(right_coord.clone());
+                coords.push(right_coord);
             }
-            coords.push(Coord{x: coord.borrow().x, y: coord.borrow().y});
-            HorizontalIterator {
-                coord: coord,
-                board: board,
-                coords: coords,
-                shot_coords: shot_coords,
-                hit_coords: hit_coords,
-                left: left,
-                right: right, 
+        }
+        coords.push(Coord{x: coord.borrow().x, y: coord.borrow().y});
+        Self {
+            coord: coord,
+            board: board,
+            coords: coords,
+            shot_coords: shot_coords,
+            hit_coords: hit_coords,
+            left: left,
+            right: right, 
 
-            }
+        }
     }
 
     pub fn get_priority_shots(&self) -> Vec<Coord> {
