@@ -1,9 +1,9 @@
-pub struct Report {
-    shots_hit: Vec<Coord>,
-    coords_damaged: Vec<Coord>
-}
+use serde::{Serialize, Deserialize};
 
-struct Coord {
-    x: i32,
-    y: i32
+use crate::data::coord::Coord;
+
+#[derive(Serialize, Deserialize)]
+pub struct Report {
+    pub shots_hit: Vec<Coord>,
+    pub coords_damaged: Vec<Coord>
 }

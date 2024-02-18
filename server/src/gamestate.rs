@@ -98,5 +98,5 @@ impl GameState {
 pub enum GameTurn {
     P1Turn,
     P2Turn,
-    Inbetween
+    InBetween
 }

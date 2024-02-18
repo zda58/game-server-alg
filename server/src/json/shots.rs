@@ -1,8 +1,13 @@
+use serde::{Deserialize, Serialize};
+
+use crate::data::coord::Coord;
+
+#[derive(Serialize, Deserialize)]
 pub struct Shots {
-    shots: Vec<Coord>
+    pub shots: Vec<Coord>
 }
 
-struct Coord {
-    x: i32,
-    y: i32    
+#[derive(Serialize, Deserialize)]
+pub struct ShotRequest {
+    pub shots: i32
 }

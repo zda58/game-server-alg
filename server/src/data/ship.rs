@@ -16,7 +16,7 @@ impl Ship {
     }
 
     pub fn shoot_at(&mut self, coord: Coord) {
-        if self.coords.contains(&coord) {
+        if self.coords.contains(&coord) && !self.destroyed_coords.contains(&coord) {
             self.destroyed_coords.push(coord.clone());
             self.reported_hit_coords.push(coord);
         }
@@ -26,5 +26,9 @@ impl Ship {
         let report_vec: Vec<Coord> = self.reported_hit_coords.clone();
         self.reported_hit_coords.clear();
         report_vec
+    }
+
+    pub fn can_shoot(&self) -> bool {
+        self.coords.len() > self.destroyed_coords.len()
     }
 }
