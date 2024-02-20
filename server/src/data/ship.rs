@@ -15,10 +15,10 @@ impl Ship {
         }
     }
 
-    pub fn shoot_at(&mut self, coord: Coord) {
+    pub fn shoot_at(&mut self, coord: &Coord) {
         if self.coords.contains(&coord) && !self.destroyed_coords.contains(&coord) {
             self.destroyed_coords.push(coord.clone());
-            self.reported_hit_coords.push(coord);
+            self.reported_hit_coords.push(coord.clone());
         }
     }
 
@@ -28,7 +28,7 @@ impl Ship {
         report_vec
     }
 
-    pub fn can_shoot(&self) -> bool {
-        self.coords.len() > self.destroyed_coords.len()
+    pub fn is_destroyed(&self) -> bool {
+        self.coords.len() <= self.destroyed_coords.len()
     }
 }

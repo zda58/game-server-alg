@@ -15,15 +15,14 @@ pub struct GameState {
 
 impl GameState {
     pub fn new(setup: &GameSetup, p1info: &ShipInfo, p2info: &ShipInfo) -> Self {
-        let oard: Vec<Vec<StateCoord>> = Vec::with_capacity(setup.height as usize);
-        let mut p1board = vec![vec![StateCoord{x: 0, y: 0, state: CoordState::Normal}; setup.width as usize]; setup.height as usize];
+        let mut p1board = vec![vec![StateCoord::new(0, 0); setup.width as usize]; setup.height as usize];
         for y in 0..setup.height {
             for x in 0..setup.width {
                 p1board[y as usize][x as usize].x = x;
                 p1board[y as usize][x as usize].x = y;
             } 
         }
-        let mut p2board = vec![vec![StateCoord{x: 0, y: 0, state: CoordState::Normal}; setup.width as usize]; setup.height as usize];
+        let mut p2board = vec![vec![StateCoord::new(0, 0); setup.width as usize]; setup.height as usize];
         for y in 0..setup.height {
             for x in 0..setup.width {
                 p2board[y as usize][x as usize].x = x;
@@ -99,4 +98,11 @@ pub enum GameTurn {
     P1Turn,
     P2Turn,
     InBetween
+}
+
+#[derive(Clone)]
+pub enum GameResult {
+    P1Win,
+    P2Win,
+    Draw
 }
