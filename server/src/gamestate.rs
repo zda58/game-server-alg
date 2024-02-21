@@ -2,6 +2,7 @@ use std::{collections::HashSet, hash::Hash, io::{self, BufRead, BufReader, Write
 
 use crate::{data::{ship::Ship, statecoord::{CoordState, StateCoord}}, json::{gamesetup::GameSetup, shipinfo::{self, ShipCoord, ShipInfo}}};
 use crate::data::coord::Coord;
+use serde::Serialize;
 use serde_json::{Deserializer, Serializer};
 use serde_json::Result;
 
@@ -100,9 +101,7 @@ pub enum GameTurn {
     InBetween
 }
 
-#[derive(Clone)]
-pub enum GameResult {
-    P1Win,
-    P2Win,
-    Draw
+#[derive(Serialize)]
+pub struct GameResult {
+    pub result: String
 }

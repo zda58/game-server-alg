@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(PartialEq, Eq, Hash, Clone)]
-pub struct Coord {
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct JsonCoord {
     pub x: i32,
     pub y: i32
 }

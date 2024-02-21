@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::data::coord::Coord;
+use super::jsoncoord::JsonCoord;
+
 
 #[derive(Serialize, Deserialize)]
 pub struct Shots {
-    pub shots: Vec<Coord>
+    pub shots: Vec<JsonCoord>
 }
 
 #[derive(Serialize, Deserialize)]

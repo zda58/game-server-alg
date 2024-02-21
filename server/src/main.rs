@@ -27,15 +27,15 @@ fn init_connections() -> (TcpStream, TcpStream) {
     let mut first_stream_option: Option<TcpStream> = None;
     let mut second_stream_option: Option<TcpStream> = None;
     for (mut idx, stream) in listener.incoming().enumerate() {
-        if idx >= 2 {
-            break;
-        }
         let curstream = match stream {
             Ok(stream) => {
                 if idx == 0 {
+                    println!("First stream acquired");
                     first_stream_option = Some(stream);
-                } else if idx == 1{
+                } else if idx == 1 {
+                    println!("Second stream acquired");
                     second_stream_option = Some(stream);
+                    break;
                 }
             },
             _ => {
@@ -43,6 +43,7 @@ fn init_connections() -> (TcpStream, TcpStream) {
             }
         };
     }
+    println!("Both acquired!");
     (first_stream_option.unwrap(), second_stream_option.unwrap())
 }
 /*

@@ -1,18 +1,22 @@
 use std::{collections::HashSet, io::{self, BufRead, BufReader, Write}, net::TcpStream};
 
-use crate::{data::{coord::Coord, ship::Ship}, gamestate::{GameResult, GameState}, json::{gamesetup::GameSetup, report::Report,  shipinfo::{ShipCoord, ShipInfo}, shots::{ShotRequest, Shots}}};
+use crate::{data::{coord::Coord, ship::Ship}, gamestate::{GameResult, GameState}, json::{jsoncoord::JsonCoord, gamesetup::GameSetup, report::Report, shipinfo::{ShipCoord, ShipInfo}, shots::{ShotRequest, Shots}}};
 use crate::gamestate::GameTurn::{P1Turn, P2Turn, InBetween};
-use crate::gamestate::GameResult::{P1Win, P2Win, Draw};
 
 pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
+    println!("ddiodjidji");
     let setup = GameSetup::new(15, 15, 3, 3, 3, 3); 
     let p1info: ShipInfo = generate_info(&p1stream, &setup).unwrap();
     let p2info: ShipInfo = generate_info(&p2stream, &setup).unwrap();
+    println!("ddddd");
     let mut game = GameState::new(&setup, &p1info, &p2info);
-    let mut result: Option<GameResult> = None;
+    let mut p1result: Option<GameResult> = None;
+    let mut p2result: Option<GameResult> = None;
+    println!("Init game");
     loop {
-        let mut p1shots: Option<Vec<Coord>> = None;
-        let mut p2shots: Option<Vec<Coord>> = None;
+        println!("Game Loop");
+        let mut p1shots: Option<Vec<JsonCoord>> = None;
+        let mut p2shots: Option<Vec<JsonCoord>> = None;
         let mut p1shotcount = get_shot_counts(&game.p1ships);
         let mut p2shotcount = get_shot_counts(&game.p2ships);
         match game.turn {
@@ -35,27 +39,42 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
                 let mut p2_damaged_coords: Vec<Coord> = Vec::new();
                 for ship in &mut game.p1ships {
                     for coord in &p2shots.clone().unwrap() {
-                        ship.shoot_at(coord);
+                        ship.shoot_at(&Coord {x: coord.x, y: coord.y});
                     }
                 }
                 for ship in &mut game.p2ships {
                     for coord in &p1shots.clone().unwrap() {
-                        ship.shoot_at(coord);
+                        ship.shoot_at(&Coord {x: coord.x, y: coord.y});
                     }
                 }
                 p1shotcount = get_shot_counts(&game.p1ships);
                 p2shotcount = get_shot_counts(&game.p2ships);
                 if p1shotcount == 0 {
                     if p2shotcount == 0 {
-                        result = Some(Draw);
+                        p1result = Some(GameResult {
+                            result: "Draw".to_string()
+                        });
+                        p2result = Some(GameResult {
+                            result: "Draw".to_string()
+                        });
                         break;
                     } else {
-                        result = Some(P2Win);
+                        p1result = Some(GameResult {
+                            result: "Lose".to_string()
+                        });
+                        p2result = Some(GameResult {
+                            result: "Win".to_string()
+                        });
                         break;
                     }
                 } else {
                     if p2shotcount == 0 {
-                        result = Some(P1Win);
+                        p1result = Some(GameResult {
+                            result: "Win".to_string()
+                        });
+                        p2result = Some(GameResult {
+                            result: "Lose".to_string()
+                        });
                         break;
                     }
                 }
@@ -73,8 +92,8 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
             }
         }
     }
-    report_game_outcome(p1stream, result.clone().unwrap());
-    report_game_outcome(p2stream, result.unwrap());
+    report_game_outcome(p1stream, p1result.unwrap());
+    report_game_outcome(p2stream, p2result.unwrap());
 }
 
 fn get_shot_counts(ships: &Vec<Ship>) -> i32 {
@@ -92,8 +111,8 @@ fn get_shots(stream: &TcpStream, shots: &ShotRequest, setup: &GameSetup) -> io::
     let mut writer = stream.try_clone()?;
 
     let shot_info = serde_json::to_string(&shots).unwrap();
-    writer.write_all(shot_info.as_bytes())?;
-    writer.flush()?;
+    writer.write_all(shot_info.as_bytes());
+    writer.flush();
 
     loop {
         let mut buffer = String::new();
@@ -130,10 +149,19 @@ fn validate_shot_info(shots: &Shots, request: &ShotRequest, setup: &GameSetup) -
 fn report_shots(stream: &TcpStream, hit_shots: &Vec<Coord>, damaged_coords: &Vec<Coord>) -> io::Result<()> { 
     let mut reader = BufReader::new(stream);
     let mut writer = stream.try_clone()?;
+
+    let mut hit_shots_json: Vec<JsonCoord> = Vec::with_capacity(hit_shots.len());
+    for coord in hit_shots {
+        hit_shots_json.push(JsonCoord {x: coord.x, y: coord.y});
+    }
+    let mut damaged_coords_json: Vec<JsonCoord> = Vec::with_capacity(damaged_coords.len());
+    for coord in damaged_coords {
+        damaged_coords_json.push(JsonCoord {x: coord.x, y: coord.y});
+    }
     
     let report = Report {
-        shots_hit: hit_shots.clone(),
-        coords_damaged: damaged_coords.clone()
+        shots_hit: hit_shots_json,
+        coords_damaged: damaged_coords_json
     };
 
     let shot_info = serde_json::to_string::<Report>(&report).unwrap();
@@ -148,8 +176,8 @@ fn generate_info(stream: &TcpStream, setup: &GameSetup) -> io::Result<(ShipInfo)
     let mut writer = stream.try_clone()?;
 
     let game_info = serde_json::to_string(&setup).unwrap();
-    writer.write_all(game_info.as_bytes())?;
-    writer.flush()?;
+    writer.write_all(game_info.as_bytes());
+    writer.flush();
 
     loop {
         let mut buffer = String::new();
@@ -210,27 +238,20 @@ fn validate_ship_coords(setup: &GameSetup, shiplen: i32, coord: &ShipCoord, coor
     let width = setup.width;
     if coord.horizontal {
         if !(coord.x > 0 && coord.x < width - shiplen) 
-        || !    let mut reader = BufReader::new(stream);
-        let mut writer = stream.try_clone()?;
-    
-        let game_info = serde_json::to_string(&setup).unwrap();
-        writer.write_all(game_info.as_bytes())?;
-        writer.flush()?;
-    
-        loop {
-            let mut buffer = String::new();
-            reader.read_line(&mut buffer)?;
-                            //p1 wins
-            match serde_json::from_str::<ShipInfo>(&buffer) {
-                Ok(info) => {
-                    if validate_setup_info(&info, &setup) {
-                        return Ok(info);
-                    }
-                }
-                _ => ()
-            };
-            writer.write_all("error".as_bytes());
-            writer.flush();
+        || !(coord.y > 0 && coord.y < height) {
+            return false;
+        }
+        for i in 0..shiplen {
+            if coords.contains(&Coord{x: coord.x + i, y: coord.y}) {
+                return false; 
+            } else {
+                coords.insert(Coord{x: coord.x + i, y: coord.y});
+            }
+        }
+    } else {
+        if !(coord.x > 0 && coord.x < width) 
+        || !(coord.y > 0 && coord.y < height - shiplen) {
+            return false;
         }
         for i in 0..shiplen {
             if coords.contains(&Coord{x: coord.x, y: coord.y + i}) {
@@ -243,26 +264,12 @@ fn validate_ship_coords(setup: &GameSetup, shiplen: i32, coord: &ShipCoord, coor
     return true;
 }
 
-fn report_game_outcome(stream: TcpStream, result: GameResult) -> io::Result<>{
+fn report_game_outcome(stream: TcpStream, result: GameResult) -> io::Result<()>{
     let mut writer = stream.try_clone()?;
 
-
-
-    let game_info = serde_json::to_string(&setup).unwrap();
+    let game_info = serde_json::to_string(&result).unwrap();
     writer.write_all(game_info.as_bytes())?;
     writer.flush()?;
 
-    loop {
-        let mut buffer = String::new();
-        match serde_json::from_str::<ShipInfo>(&buffer) {
-            Ok(info) => {
-                if validate_setup_info(&info, &setup) {
-                    return Ok(info);
-                }
-            }
-            _ => ()
-        };
-        writer.write_all("error".as_bytes());
-        writer.flush();
-    }
+    Ok(())
 }
