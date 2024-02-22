@@ -1,6 +1,6 @@
 use std::{collections::HashSet, io::{self, BufRead, BufReader, Write}, net::TcpStream};
 
-use crate::{data::{coord::Coord, ship::Ship}, gamestate::{GameResult, GameState}, json::{jsoncoord::JsonCoord, gamesetup::GameSetup, report::Report, shipinfo::{ShipCoord, ShipInfo}, shots::{ShotRequest, Shots}}};
+use crate::{data::{coord::Coord, ship::Ship}, gamestate::{GameResult, GameState}, shipjson::json::{jsoncoord::JsonCoord, gamesetup::GameSetup, report::Report, shipinfo::{ShipCoord, ShipInfo}, shots::{ShotRequest, Shots}}};
 use crate::gamestate::GameTurn::{P1Turn, P2Turn, InBetween};
 
 pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {

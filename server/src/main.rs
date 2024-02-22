@@ -7,8 +7,7 @@ use local_ip_address::local_ip;
 use serde_json::{Deserializer, Serializer};
 use serde_json::Result;
 
-
-mod json;
+use shipjson;
 mod gamestate;
 mod data;
 mod game;

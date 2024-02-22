@@ -1,6 +1,7 @@
 use std::{collections::HashSet, hash::Hash, io::{self, BufRead, BufReader, Write}, net::TcpStream};
 
-use crate::{data::{ship::Ship, statecoord::{CoordState, StateCoord}}, json::{gamesetup::GameSetup, shipinfo::{self, ShipCoord, ShipInfo}}};
+use shipjson::{self, json::{gamesetup::GameSetup, shipinfo::ShipInfo}};
+use crate::{data::{ship::Ship, statecoord::{CoordState, StateCoord}}};
 use crate::data::coord::Coord;
 use serde::Serialize;
 use serde_json::{Deserializer, Serializer};

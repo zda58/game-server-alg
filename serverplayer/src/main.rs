@@ -2,8 +2,9 @@ mod algorithm;
 mod data;
 mod dealer;
 mod player;
-mod json;
 
+use shipjson;
+use shipjson::json::gamesetup::GameSetup;
 use std::collections::HashMap;
 use data::{game::GameState};
 use player::algorithmplayer::{AlgorithmPlayer};
@@ -14,53 +15,49 @@ use std::net::TcpStream;
 
 use serde_json::{Deserializer, Serializer};
 
-use crate::json::gamesetup::GameSetup;
 
+fn main() {
+    let mut server_stream = connect_to_server_stream();
+    server_stream.set_nonblocking(true);
 
-fn main() -> std::io::Result<()> {
+    init_game_loop(server_stream);
+}
+
+fn connect_to_server_stream() -> TcpStream {
     println!("Enter the address to connect to:");
 
     let mut server_address = String::new();
-    io::stdin().read_line(&mut server_address)?;
+    io::stdin().read_line(&mut server_address);
     let server_address = server_address.trim();
 
-    let mut stream = TcpStream::connect(server_address)?;
+    TcpStream::connect(server_address).expect("Failed to connect")
+}
 
+fn init_game_loop(mut server_stream: TcpStream) {
+    
     let mut buffer = [0; 1024];
-
-    // Set the stream to non-blocking mode
-    stream.set_nonblocking(true)?;
-
     loop {
-        match stream.read(&mut buffer) {
+        match server_stream.read(&mut buffer) {
             Ok(0) => {
-                // Server closed the connection
                 println!("Server closed");
                 break;
             }
             Ok(n) => {
-                // Data received, convert it to a string and print
                 let received_data = &String::from_utf8_lossy(&buffer[..n]).into_owned();
                 let setup = serde_json::from_str::<GameSetup>(received_data).unwrap();
                 println!("setup: {} {} {}", setup.battleships, setup.height, setup.carriers);
                 println!("Received data from server: {}", received_data);
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                // No data available, sleep for a short duration to avoid busy-waiting
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
             Err(e) => {
-                // Other errors
                 eprintln!("Error reading from server: {}", e);
                 break;
             }
         }
     }
-
-    Ok(())
 }
-
-
 
 /*
 
