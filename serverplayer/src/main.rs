@@ -2,41 +2,65 @@ mod algorithm;
 mod data;
 mod dealer;
 mod player;
+mod json;
 
 use std::collections::HashMap;
 use data::{game::GameState};
 use player::algorithmplayer::{AlgorithmPlayer};
 use dealer::{Dealer};
 use data::ship::shippiece::ShipType;
+use std::io::{self, Read};
+use std::net::TcpStream;
 
-use std::net::{TcpListener, TcpStream};
-use std::io::{self, Read, Write};
+use serde_json::{Deserializer, Serializer};
+
+use crate::json::gamesetup::GameSetup;
+
 
 fn main() -> std::io::Result<()> {
-    // Prompt the user to enter the server address
-    println!("Enter the server address (e.g., 127.0.0.1:8080):");
-    
-    // Read server address from user input
+    println!("Enter the address to connect to:");
+
     let mut server_address = String::new();
     io::stdin().read_line(&mut server_address)?;
-    let server_address = server_address.trim(); // Remove trailing newline
+    let server_address = server_address.trim();
 
-    // Connect to the server
     let mut stream = TcpStream::connect(server_address)?;
 
-    // Write data to the server
-    loop {
-        let message = "fefse";
-        println!("Reasdasd");
-        println!("Re");
-        // Read response from the server
-        let mut response = String::new();
-        stream.read_to_string(&mut response);
+    let mut buffer = [0; 1024];
 
-        println!("Received response from server: {}", response);
+    // Set the stream to non-blocking mode
+    stream.set_nonblocking(true)?;
+
+    loop {
+        match stream.read(&mut buffer) {
+            Ok(0) => {
+                // Server closed the connection
+                println!("Server closed");
+                break;
+            }
+            Ok(n) => {
+                // Data received, convert it to a string and print
+                let received_data = &String::from_utf8_lossy(&buffer[..n]).into_owned();
+                let setup = serde_json::from_str::<GameSetup>(received_data).unwrap();
+                println!("setup: {} {} {}", setup.battleships, setup.height, setup.carriers);
+                println!("Received data from server: {}", received_data);
+            }
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                // No data available, sleep for a short duration to avoid busy-waiting
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+            Err(e) => {
+                // Other errors
+                eprintln!("Error reading from server: {}", e);
+                break;
+            }
+        }
     }
+
     Ok(())
 }
+
+
 
 /*
 

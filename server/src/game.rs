@@ -176,10 +176,25 @@ fn generate_info(stream: &TcpStream, setup: &GameSetup) -> io::Result<(ShipInfo)
     let mut writer = stream.try_clone()?;
 
     let game_info = serde_json::to_string(&setup).unwrap();
-    writer.write_all(game_info.as_bytes());
-    writer.flush();
+    match writer.write_all(game_info.as_bytes()) {
+        Ok(_) => {
+            println!("1 succeeded");
+        }
+        Err(_) => {
+            println!("1 failed")
+        }
+    }
+    match writer.flush() {
+        Ok(_) => {
+            println!("2 succeeded");
+        }
+        Err(_) => {
+            println!("2 failed")
+        },
+    }
 
     loop {
+        println!("loop");
         let mut buffer = String::new();
         reader.read_line(&mut buffer)?;
                         //p1 wins
