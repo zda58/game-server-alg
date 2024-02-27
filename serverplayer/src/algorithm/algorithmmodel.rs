@@ -1,5 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
+use shipjson::json::gamesetup::{self, GameSetup};
+
 use crate::data::{coordinates::{coord::Coord, heatmapcoord::HeatmapCoord}, ship::shippiece::ShipType};
 
 use super::{horizontaliterator::HorizontalIterator, verticaliterator::VerticalIterator};
@@ -18,26 +20,33 @@ pub struct AlgorithmModel {
 }
 
 impl AlgorithmModel {
-    pub fn new(spec: &HashMap<ShipType, u32>, height: usize, width: usize) -> Self {
+    pub fn new(setup: &GameSetup) -> Self {
         let mut possible_other_ships: Vec<ShipType> = Vec::new();
-        for (ship_type, count) in spec {
-            for i in 0..count.clone() {
-                possible_other_ships.push(ship_type.clone());
-            }
+        for _ in 0..setup.submarines {
+            possible_other_ships.push(ShipType::Submarine.clone());
         }
-        let mut other_board_heat_map: Vec<Vec<Rc<RefCell<HeatmapCoord>>>> = Vec::with_capacity(height);
-        for y in 0..height {
-            other_board_heat_map.push(Vec::with_capacity(width));
-            for x in 0..width {
+        for _ in 0..setup.destroyers {
+            possible_other_ships.push(ShipType::Destroyer.clone());
+        }
+        for _ in 0..setup.battleships {
+            possible_other_ships.push(ShipType::Battleship.clone());
+        }
+        for _ in 0..setup.carriers {
+            possible_other_ships.push(ShipType::Carrier.clone());
+        }
+        let mut other_board_heat_map: Vec<Vec<Rc<RefCell<HeatmapCoord>>>> = Vec::with_capacity(setup.height as usize);
+        for y in 0..setup.height as usize {
+            other_board_heat_map.push(Vec::with_capacity(setup.width as usize));
+            for x in 0..setup.width {
                 other_board_heat_map[y].push(Rc::new(RefCell::new(HeatmapCoord{x: x as u32, y: y as u32, heat: 0})));
             }
         }
         let horizontal_iterators: Vec<HorizontalIterator> = Vec::new();
         let vertical_iterators: Vec<VerticalIterator> = Vec::new();
         let priority_coords: Vec<Coord> = Vec::new();
-        let mut remaining_coords: Vec<Rc<RefCell<HeatmapCoord>>> = Vec::with_capacity(height * width);
-        for y in 0..height {
-            for x in 0..width {
+        let mut remaining_coords: Vec<Rc<RefCell<HeatmapCoord>>> = Vec::with_capacity(setup.height as usize * setup.width as usize);
+        for y in 0..setup.height as usize {
+            for x in 0..setup.width as usize {
                 remaining_coords.push(Rc::clone(&other_board_heat_map[y][x]));
             }
         }

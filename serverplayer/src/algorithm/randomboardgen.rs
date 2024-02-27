@@ -1,32 +1,41 @@
 use rand::Rng;
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use shipjson::json::{gamesetup::GameSetup, shipinfo::{ShipCoord, ShipInfo}};
+use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 use crate::data::{coordinates::{coord::{self, Coord}, owncoord::{generate_null_coord, OwnCoord}, statecoord::StateCoord}, ship::shippiece::{ShipPiece, ShipType}};
 
-pub fn generate_board(spec: &HashMap<ShipType, u32>, height: usize, width: usize) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<ShipPiece>>>) {
+pub fn generate_board(setup: &GameSetup) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<ShipPiece>>>, ShipInfo) {
     let mut rand = rand::thread_rng();
     let mut board: Vec<Vec<OwnCoord>> = Vec::new();
     let mut valid_board = false;
     let mut ships: Vec<Rc<RefCell<ShipPiece>>> = Vec::new();
+    let mut ships_json: ShipInfo = ShipInfo::new();
     while !valid_board {
-        ships = Vec::new();
+        ships.clear();
+        ships_json.clear();
         board.clear();
-        board = vec![vec![generate_null_coord(); height]; width];
-        for y in 0..height {
-            for x in 0..width {
+        board = vec![vec![generate_null_coord(); setup.height as usize]; setup.width as usize];
+        for y in 0..setup.height as usize {
+            for x in 0..setup.width as usize {
                 board[y][x].x = x as u32;
                 board[y][x].y = y as u32;
             }
         }
         let mut overlap = false;
+        let mut spec: HashMap<ShipType, i32> = HashMap::new();
+        spec.insert(ShipType::Submarine, setup.submarines);
+        spec.insert(ShipType::Destroyer, setup.destroyers);
+        spec.insert(ShipType::Battleship, setup.battleships);
+        spec.insert(ShipType::Carrier, setup.carriers);
         for item in spec {
-            let clone = item.clone();
             let shiptype = item.0.clone();
-            for i in 0..item.1.clone() as usize {
+            for _ in 0..item.1.clone() as usize {
                 let rand_coords: Vec<Coord>;
+                let mut horizontal = true;
                 if rand.gen_bool(0.5) {
                     rand_coords = generate_horizontal_coords(&mut board, shiptype.len());
                 } else {
                     rand_coords = generate_vertical_coords(&mut board, shiptype.len());
+                    horizontal = false;
                 }
                 let ship: ShipPiece = ShipPiece {
                     ship_type: shiptype,
@@ -35,10 +44,25 @@ pub fn generate_board(spec: &HashMap<ShipType, u32>, height: usize, width: usize
                     reported_hit_coords: Vec::new()
                 };
 
+                let central_coord = rand_coords[0].clone();
+
+                let json_coord: ShipCoord = ShipCoord {
+                    horizontal: horizontal,
+                    x: central_coord.x as i32,
+                    y: central_coord.y as i32
+                };
+
+                match shiptype {
+                    ShipType::Submarine => ships_json.submarines.push(json_coord),
+                    ShipType::Destroyer => ships_json.destroyers.push(json_coord),
+                    ShipType::Battleship => ships_json.battleships.push(json_coord),
+                    ShipType::Carrier => ships_json.carriers.push(json_coord)
+                }
+
                 let ship_rc = Rc::new(RefCell::new(ship));
 
                 for statecoord in rand_coords {
-                    let mut coord: &mut OwnCoord = &mut board[statecoord.y as usize][statecoord.x as usize];
+                    let coord: &mut OwnCoord = &mut board[statecoord.y as usize][statecoord.x as usize];
                     if coord.is_empty() {
                         coord.ship = Some(Rc::clone(&ship_rc));
                     } else {
@@ -52,7 +76,7 @@ pub fn generate_board(spec: &HashMap<ShipType, u32>, height: usize, width: usize
             valid_board = true;
         }
     }
-    (board, ships)
+    (board, ships, ships_json)
 }
 
 fn generate_horizontal_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> Vec<Coord> {

@@ -3,6 +3,9 @@ use std::collections::HashMap;
 use std::{cell::RefCell, rc::Rc};
 
 
+use shipjson::json::gamesetup::GameSetup;
+use shipjson::json::shipinfo::ShipInfo;
+
 use crate::algorithm::randomboardgen;
 use crate::data::coordinates::coord::Coord;
 use crate::data::coordinates::owncoord::OwnCoord;
@@ -19,23 +22,23 @@ pub struct AlgorithmPlayer {
 }
 
 impl AlgorithmPlayer {
-    pub fn new(name: String, spec: &HashMap<ShipType, u32>, width: usize, height: usize,) -> Self {
-        let model = AlgorithmModel::new(spec, height, width);
-        let boardships = randomboardgen::generate_board(spec, height, width);
-        let mut other_board = vec![vec![StateCoord{x: 0, y: 0, state: CoordState::Normal}; width]; height];
-        for x in 0..width {
-            for y in 0..height {
+    pub fn new(name: String, setup: GameSetup) -> (Self, ShipInfo) {
+        let model = AlgorithmModel::new(&setup);
+        let boardships = randomboardgen::generate_board(&setup);
+        let mut other_board: Vec<Vec<StateCoord>> = vec![vec![StateCoord{x: 0, y: 0, state: CoordState::Normal}; setup.width as usize]; setup.height as usize];
+        for x in 0..setup.width as usize {
+            for y in 0..setup.height as usize {
                 other_board[y][x].x = x as u32;
                 other_board[y][x].y = y as u32;
             }
         }
-        Self {
+        (Self {
             name: name,
             model: model,
             own_board: boardships.0,
             other_board: other_board,
             ships: boardships.1
-        }
+        }, boardships.2)
     }
 
     pub fn name(&self) -> String {

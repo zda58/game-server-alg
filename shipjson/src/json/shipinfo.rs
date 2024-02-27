@@ -9,6 +9,24 @@ pub struct ShipInfo {
     pub carriers: Vec<ShipCoord>,
 }
 
+impl ShipInfo {
+    pub fn new() -> Self {
+        Self {
+            submarines: Vec::new(),
+            destroyers: Vec::new(),
+            battleships: Vec::new(),
+            carriers: Vec::new()
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.submarines.clear();
+        self.destroyers.clear();
+        self.battleships.clear();
+        self.carriers.clear();
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShipCoord {
     pub horizontal: bool,
