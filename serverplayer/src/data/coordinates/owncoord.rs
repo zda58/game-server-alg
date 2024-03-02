@@ -6,8 +6,8 @@ use super::coord::Coord;
 
 #[derive(Clone)]
 pub struct OwnCoord {
-    pub x: u32,
-    pub y: u32,
+    pub x: i32,
+    pub y: i32,
     pub ship: Option<Rc<RefCell<ShipPiece>>>,
     pub shot: bool
 }

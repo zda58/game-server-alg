@@ -1,4 +1,5 @@
 pub mod gamesetup;
+pub mod gamestate;
 pub mod report;
 pub mod result;
 pub mod shipinfo;

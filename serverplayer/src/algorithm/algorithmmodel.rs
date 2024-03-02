@@ -38,7 +38,7 @@ impl AlgorithmModel {
         for y in 0..setup.height as usize {
             other_board_heat_map.push(Vec::with_capacity(setup.width as usize));
             for x in 0..setup.width {
-                other_board_heat_map[y].push(Rc::new(RefCell::new(HeatmapCoord{x: x as u32, y: y as u32, heat: 0})));
+                other_board_heat_map[y].push(Rc::new(RefCell::new(HeatmapCoord{x: x as i32, y: y as i32, heat: 0})));
             }
         }
         let horizontal_iterators: Vec<HorizontalIterator> = Vec::new();
@@ -77,7 +77,7 @@ impl AlgorithmModel {
                 for x in 0..self.other_board_heat_map[0].len() {
                     let mut list: Vec<Coord> = Vec::new();
                     for i in 0..ship_type.len() {
-                        list.push(Coord{x: x as u32, y: (y + i) as u32});
+                        list.push(Coord{x: x as i32, y: (y + i) as i32});
                     }
                     self.update_valid_position_coords(list);
                 }
@@ -89,7 +89,7 @@ impl AlgorithmModel {
                 for x in 0..=self.other_board_heat_map[0].len() - ship_type.len() {
                     let mut list: Vec<Coord> = Vec::new();
                     for i in 0..ship_type.len() {
-                        list.push(Coord{x: (x + i) as u32, y: y as u32});
+                        list.push(Coord{x: (x + i) as i32, y: y as i32});
                     }
                     self.update_valid_position_coords(list);
                 }

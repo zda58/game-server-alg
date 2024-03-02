@@ -16,8 +16,8 @@ pub fn generate_board(setup: &GameSetup) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<
         board = vec![vec![generate_null_coord(); setup.height as usize]; setup.width as usize];
         for y in 0..setup.height as usize {
             for x in 0..setup.width as usize {
-                board[y][x].x = x as u32;
-                board[y][x].y = y as u32;
+                board[y][x].x = x as i32;
+                board[y][x].y = y as i32;
             }
         }
         let mut overlap = false;
@@ -86,7 +86,7 @@ fn generate_horizontal_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> 
 
     let mut vec: Vec<Coord> = Vec::new();
     for x in left_coord_x..left_coord_x + length {
-        vec.push(Coord{x: x as u32, y: coord_y as u32});
+        vec.push(Coord{x: x as i32, y: coord_y as i32});
     }
     vec
 }
@@ -98,7 +98,7 @@ fn generate_vertical_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> Ve
     
     let mut vec: Vec<Coord> = Vec::new();
     for y in top_coord_y..top_coord_y + length {
-        vec.push(Coord{x: coord_x as u32, y: y as u32});
+        vec.push(Coord{x: coord_x as i32, y: y as i32});
     }
     vec
 }

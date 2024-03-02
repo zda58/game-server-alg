@@ -28,7 +28,7 @@ impl VerticalIterator {
                 coords.push(top_coord);
             }
         }
-        if y_coord < (board.len() - 1) as u32 {
+        if y_coord < (board.len() - 1) as i32 {
             let top_coord = Coord{x: x_coord, y: y_coord + 1};
             let heat = board[(y_coord + 1) as usize][x_coord as usize].borrow().heat;
             if heat > 0 && hit_coords.borrow().contains(&top_coord) {
@@ -108,7 +108,7 @@ impl VerticalIterator {
                         self.coords.push(coord.clone());
                         let coord_y = coord.y;
                         let coord_x = coord.x;
-                        if coord_y < (self.board.len() - 1) as u32 {
+                        if coord_y < (self.board.len() - 1) as i32 {
                             let bottom_coord = Coord{x: coord_x, y: coord_y + 1};
                             let heat = self.board[(coord_y + 1) as usize][coord_x as usize].borrow().heat;
                             if heat > 0 && !self.hit_coords.borrow().contains(&bottom_coord) {
