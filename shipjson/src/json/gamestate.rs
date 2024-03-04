@@ -6,5 +6,6 @@ use serde_json::{Serializer, Deserializer};
 pub enum CurrentGameState {
     Win,
     Loss,
+    Draw,
     Ongoing
 }

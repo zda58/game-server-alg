@@ -8,18 +8,18 @@ use data::ship;
 use shipjson;
 use shipjson::json::gamesetup::{self, GameSetup};
 use shipjson::json::gamestate::CurrentGameState;
-use shipjson::json::gamestate::{CurrentGameState::{Win, Loss, Ongoing}};
+use shipjson::json::gamestate::{CurrentGameState::{Win, Loss, Draw, Ongoing}};
 use shipjson::json::jsoncoord::JsonCoord;
 use shipjson::json::report::Report;
 use shipjson::json::shipinfo::ShipInfo;
 use shipjson::json::shots::{self, ShotRequest, Shots};
 use std::collections::HashMap;
 use std::process::exit;
-use data::{game};
+//use data::{game};
 use player::algorithmplayer::{AlgorithmPlayer};
-use dealer::{Dealer};
+//use dealer;
 use data::ship::shippiece::ShipType;
-use std::io::{self, Read, Write};
+use std::io::{self, BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
 
 use serde_json::{Deserializer, Serializer};
@@ -50,19 +50,18 @@ fn connect_to_server_stream() -> TcpStream {
 }
 
 fn get_game_setup(mut server_stream: &TcpStream) -> GameSetup{
-    
-    let mut buffer = [0; 1024];
+    let mut reader = BufReader::new(server_stream);
     loop {
-        match server_stream.read(&mut buffer) {
+        let mut buffer = String::new();
+        match reader.read_line(&mut buffer) {
             Ok(0) => {
                 println!("Server closed");
                 exit(0);
             }
             Ok(n) => {
-                let received_data = &String::from_utf8_lossy(&buffer[..n]).into_owned();
-                let setup = serde_json::from_str::<GameSetup>(received_data).unwrap();
+                let setup = serde_json::from_str::<GameSetup>(&buffer).unwrap();
                 println!("setup: {} {} {}", setup.battleships, setup.height, setup.carriers);
-                println!("Received data from server: {}", received_data);
+                println!("Received data from server: {}", buffer);
                 return setup;
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
@@ -79,26 +78,29 @@ fn get_game_setup(mut server_stream: &TcpStream) -> GameSetup{
 fn report_ships(mut server_stream: &TcpStream, info: ShipInfo) {
     let mut writer = server_stream.try_clone().unwrap();
     let ship_info = serde_json::to_string(&info).unwrap();
-    writer.write_all(ship_info.as_bytes());
+    println!("reported {}", &ship_info);
+    let write_data = format!("{}\n", ship_info);
+    writer.write_all(write_data.as_bytes());
     writer.flush();
 }
 
 fn get_shot_count(mut server_stream: &TcpStream) -> ShotRequest {
-    let mut buffer = [0; 1024];
+    let mut reader = BufReader::new(server_stream);
     loop {
-        match server_stream.read(&mut buffer) {
+        let mut buffer = String::new();
+        match reader.read_line(&mut buffer) {
             Ok(0) => {
-                println!("Server closed");
+                println!("Server closed????");
                 exit(0);
             }
             Ok(n) => {
-                let received_data = &String::from_utf8_lossy(&buffer[..n]).into_owned();
-                let request = serde_json::from_str::<ShotRequest>(received_data).unwrap();
+                let request = serde_json::from_str::<ShotRequest>(&buffer).unwrap();
                 println!("request: {}", request.shots);
-                println!("Received data from server: {}", received_data);
+                println!("Received data from server: {}", buffer);
                 return request;
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                println!("sleep");
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
             Err(e) => {
@@ -116,17 +118,23 @@ fn begin_game_loop(server_stream: &TcpStream, mut player: AlgorithmPlayer) {
         match game_state.as_ref().unwrap() {
             Win => break,
             Loss => break,
+            Draw => break,
             Ongoing => (),
         }
+        println!("1");
         let shot_request = get_shot_count(server_stream);
+        println!("2");
         let shots = player.take_shots();
         let mut json_shots: Vec<JsonCoord> = Vec::with_capacity(shots.len());
         for shot in shots {
             json_shots.push(JsonCoord {x: shot.x, y: shot.y});
         }
         let response: Shots = Shots {shots: json_shots};
+        println!("3");
         report_shots(server_stream, response);
+        println!("4");
         let report = get_report(server_stream);
+        println!("5");
         let mut damaged_coords: Vec<Coord> = Vec::with_capacity(report.coords_damaged.len());
         for shot in report.coords_damaged {
             damaged_coords.push(Coord{x: shot.x, y: shot.y});
@@ -141,21 +149,23 @@ fn begin_game_loop(server_stream: &TcpStream, mut player: AlgorithmPlayer) {
     match game_state.unwrap() {
         Win => println!("WIN"),
         Loss => println!("LOSS"),
+        Draw => println!("DRAW"),
         _ => (),
     }
 }
 
 fn get_game_state(mut server_stream: &TcpStream) -> CurrentGameState {
-    let mut buffer = [0; 1024];
+    let mut reader = BufReader::new(server_stream);
     loop {
-        match server_stream.read(&mut buffer) {
+        let mut buffer = String::new();
+        match reader.read_line(&mut buffer) {
             Ok(0) => {
                 println!("Server closed");
                 exit(0);
             }
             Ok(n) => {
-                let received_data = &String::from_utf8_lossy(&buffer[..n]).into_owned();
-                let state = serde_json::from_str::<CurrentGameState>(received_data).unwrap();
+                let state = serde_json::from_str::<CurrentGameState>(&buffer).unwrap();
+                println!("received data: {}", buffer);
                 return state;
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
@@ -170,23 +180,27 @@ fn get_game_state(mut server_stream: &TcpStream) -> CurrentGameState {
 }
 
 fn report_shots(server_stream: &TcpStream, shots: Shots) {
+    println!("reporting shots");
     let mut writer = server_stream.try_clone().unwrap();
     let ship_info = serde_json::to_string(&shots).unwrap();
-    writer.write_all(ship_info.as_bytes());
+    let write_data = format!("{}\n", ship_info);
+    writer.write_all(write_data.as_bytes());
     writer.flush();
+    println!("reporting shots done");
 }
 
 fn get_report(mut server_stream: &TcpStream) -> Report {
-    let mut buffer = [0; 1024];
+    let mut reader = BufReader::new(server_stream);
     loop {
-        match server_stream.read(&mut buffer) {
+        let mut buffer = String::new();
+        match reader.read_line(&mut buffer) {
             Ok(0) => {
                 println!("Server closed");
                 exit(0);
             }
             Ok(n) => {
-                let received_data = &String::from_utf8_lossy(&buffer[..n]).into_owned();
-                let report = serde_json::from_str::<Report>(received_data).unwrap();
+                let report = serde_json::from_str::<Report>(&buffer).unwrap();
+                println!("received data: {}", buffer);
                 return report;
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
