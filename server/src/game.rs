@@ -1,4 +1,4 @@
-use std::{arch::x86_64::_CMP_LE_OQ, cmp::Ordering, collections::HashSet, io::{self, BufRead, BufReader, Read, Write}, net::TcpStream, process::exit};
+use std::{arch::x86_64::_CMP_LE_OQ, borrow::BorrowMut, cmp::Ordering, collections::HashSet, io::{self, BufRead, BufReader, Read, Write}, net::TcpStream, process::exit};
 
 use shipjson::json::gamestate::CurrentGameState;
 
@@ -7,10 +7,12 @@ use crate::gamestate::GameTurn::{P1Turn, P2Turn, InBetween};
 use shipjson::json::gamestate::CurrentGameState::{Win, Loss, Draw, Ongoing};
 
 pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
+    let mut p1reader = BufReader::new(&p1stream);
+    let mut p2reader = BufReader::new(&p2stream);
     println!("ddiodjidji");
     let setup = GameSetup::new(15, 15, 3, 3, 3, 3); 
-    let p1info: ShipInfo = generate_info(&p1stream, &setup).unwrap();
-    let p2info: ShipInfo = generate_info(&p2stream, &setup).unwrap();
+    let p1info: ShipInfo = generate_info(&mut p1reader,&p1stream, &setup).unwrap();
+    let p2info: ShipInfo = generate_info(&mut p2reader, &p2stream, &setup).unwrap();
     println!("ddddd");
     let mut game = GameState::new(&setup, &p1info, &p2info);
     let mut p1state: CurrentGameState = Ongoing;
@@ -50,7 +52,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
                 let shot_request = ShotRequest {
                     shots: p1shotcount
                 };
-                p1shots = Some(get_shots(&p1stream, &shot_request, &setup).unwrap().shots);
+                p1shots = Some(get_shots(&mut p1reader, &p1stream, &shot_request, &setup).unwrap().shots);
                 game.turn = P2Turn;
             },
             P2Turn => {
@@ -58,7 +60,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
                 let shot_request = ShotRequest {
                     shots: p2shotcount
                 };
-                p2shots = Some(get_shots(&p2stream, &shot_request, &setup).unwrap().shots);
+                p2shots = Some(get_shots(&mut p2reader, &p2stream, &shot_request, &setup).unwrap().shots);
                 game.turn = InBetween;
             },
             InBetween => {
@@ -117,9 +119,7 @@ fn get_shot_counts(ships: &Vec<Ship>) -> i32 {
     count 
 }
 
-fn get_shots(stream: &TcpStream, shots: &ShotRequest, setup: &GameSetup) -> io::Result<(Shots)> { 
-    let mut reader = BufReader::new(stream);
-    let mut writer = stream.try_clone()?;
+fn get_shots(reader: &mut BufReader<&TcpStream>, mut writer: &TcpStream, shots: &ShotRequest, setup: &GameSetup) -> io::Result<(Shots)> { 
 
     let shot_info = serde_json::to_string(&shots).unwrap();
     let write_data = format!("{}\n", shot_info);
@@ -172,7 +172,6 @@ fn validate_shot_info(shots: &Shots, request: &ShotRequest, setup: &GameSetup) -
 }
 
 fn report_shots(stream: &TcpStream, hit_shots: &Vec<Coord>, damaged_coords: &Vec<Coord>) -> io::Result<()> { 
-    let mut reader = BufReader::new(stream);
     let mut writer = stream.try_clone()?;
 
     let mut hit_shots_json: Vec<JsonCoord> = Vec::with_capacity(hit_shots.len());
@@ -198,8 +197,7 @@ fn report_shots(stream: &TcpStream, hit_shots: &Vec<Coord>, damaged_coords: &Vec
     Ok(())
 }
 
-fn generate_info(stream: &TcpStream, setup: &GameSetup) -> io::Result<(ShipInfo)> { 
-    let mut reader = BufReader::new(stream);
+fn generate_info(reader: &mut BufReader<&TcpStream>, stream: &TcpStream, setup: &GameSetup) -> io::Result<(ShipInfo)> { 
     let mut writer = stream.try_clone()?;
 
     let game_info = serde_json::to_string(&setup).unwrap();

@@ -49,8 +49,7 @@ fn connect_to_server_stream() -> TcpStream {
     TcpStream::connect(server_address).expect("Failed to connect")
 }
 
-fn get_game_setup(mut server_stream: &TcpStream) -> GameSetup{
-    let mut reader = BufReader::new(server_stream);
+fn get_game_setup(reader: &BufReader<&TcpStream>) -> GameSetup{
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
@@ -84,8 +83,7 @@ fn report_ships(mut server_stream: &TcpStream, info: ShipInfo) {
     writer.flush();
 }
 
-fn get_shot_count(mut server_stream: &TcpStream) -> ShotRequest {
-    let mut reader = BufReader::new(server_stream);
+fn get_shot_count(mut reader: &BufReader<&TcpStream>) -> ShotRequest {
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
@@ -154,8 +152,7 @@ fn begin_game_loop(server_stream: &TcpStream, mut player: AlgorithmPlayer) {
     }
 }
 
-fn get_game_state(mut server_stream: &TcpStream) -> CurrentGameState {
-    let mut reader = BufReader::new(server_stream);
+fn get_game_state(reader: &BufReader<&TcpStream>) -> CurrentGameState {
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
@@ -189,8 +186,7 @@ fn report_shots(server_stream: &TcpStream, shots: Shots) {
     println!("reporting shots done");
 }
 
-fn get_report(mut server_stream: &TcpStream) -> Report {
-    let mut reader = BufReader::new(server_stream);
+fn get_report(reader: &BufReader<&TcpStream>, ) -> Report {
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
