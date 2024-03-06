@@ -11,7 +11,7 @@ impl Ship {
         Self {
             coords: coords,
             destroyed_coords: Vec::new(),
-            reported_hit_coords: Vec::new()
+            reported_hit_coords: Vec::new(),
         }
     }
 

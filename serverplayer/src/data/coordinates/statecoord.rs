@@ -2,7 +2,7 @@
 pub struct StateCoord {
     pub x: u32,
     pub y: u32,
-    pub state: CoordState
+    pub state: CoordState,
 }
 
 impl StateCoord {
@@ -18,7 +18,7 @@ impl StateCoord {
         match self.state {
             CoordState::Normal => ".".to_string(),
             CoordState::Shot => "o".to_string(),
-            CoordState::Hit => "x".to_string()
+            CoordState::Hit => "x".to_string(),
         }
     }
 }
@@ -27,5 +27,5 @@ impl StateCoord {
 pub enum CoordState {
     Normal,
     Shot,
-    Hit
+    Hit,
 }

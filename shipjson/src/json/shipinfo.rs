@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use serde_json::{Serializer, Deserializer};
+use serde_json::{Deserializer, Serializer};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShipInfo {
@@ -15,7 +15,7 @@ impl ShipInfo {
             submarines: Vec::new(),
             destroyers: Vec::new(),
             battleships: Vec::new(),
-            carriers: Vec::new()
+            carriers: Vec::new(),
         }
     }
 
@@ -31,5 +31,5 @@ impl ShipInfo {
 pub struct ShipCoord {
     pub horizontal: bool,
     pub x: i32,
-    pub y: i32
+    pub y: i32,
 }

@@ -1,10 +1,8 @@
-use std::num::NonZeroI128;
-
 #[derive(Clone)]
 pub struct StateCoord {
     pub x: i32,
     pub y: i32,
-    pub state: CoordState
+    pub state: CoordState,
 }
 
 impl StateCoord {
@@ -12,7 +10,7 @@ impl StateCoord {
         Self {
             x: x,
             y: y,
-            state: CoordState::Normal
+            state: CoordState::Normal,
         }
     }
 
@@ -27,5 +25,5 @@ impl StateCoord {
 pub enum CoordState {
     Normal,
     Shot,
-    Hit
+    Hit,
 }

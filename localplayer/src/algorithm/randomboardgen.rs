@@ -1,8 +1,18 @@
+use crate::data::{
+    coordinates::{
+        coord::Coord,
+        owncoord::{generate_null_coord, OwnCoord},
+    },
+    ship::shippiece::{ShipPiece, ShipType},
+};
 use rand::Rng;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
-use crate::data::{coordinates::{coord::{self, Coord}, owncoord::{generate_null_coord, OwnCoord}, statecoord::StateCoord}, ship::shippiece::{ShipPiece, ShipType}};
 
-pub fn generate_board(spec: &HashMap<ShipType, u32>, height: usize, width: usize) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<ShipPiece>>>) {
+pub fn generate_board(
+    spec: &HashMap<ShipType, u32>,
+    height: usize,
+    width: usize,
+) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<ShipPiece>>>) {
     let mut rand = rand::thread_rng();
     let mut board: Vec<Vec<OwnCoord>> = Vec::new();
     let mut valid_board = false;
@@ -32,13 +42,14 @@ pub fn generate_board(spec: &HashMap<ShipType, u32>, height: usize, width: usize
                     ship_type: shiptype,
                     coords: rand_coords.clone(),
                     destroyed_coords: Vec::new(),
-                    reported_hit_coords: Vec::new()
+                    reported_hit_coords: Vec::new(),
                 };
 
                 let ship_rc = Rc::new(RefCell::new(ship));
 
                 for statecoord in rand_coords {
-                    let mut coord: &mut OwnCoord = &mut board[statecoord.y as usize][statecoord.x as usize];
+                    let mut coord: &mut OwnCoord =
+                        &mut board[statecoord.y as usize][statecoord.x as usize];
                     if coord.is_empty() {
                         coord.ship = Some(Rc::clone(&ship_rc));
                     } else {
@@ -62,7 +73,10 @@ fn generate_horizontal_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> 
 
     let mut vec: Vec<Coord> = Vec::new();
     for x in left_coord_x..left_coord_x + length {
-        vec.push(Coord{x: x as u32, y: coord_y as u32});
+        vec.push(Coord {
+            x: x as u32,
+            y: coord_y as u32,
+        });
     }
     vec
 }
@@ -71,10 +85,13 @@ fn generate_vertical_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> Ve
     let mut rand: rand::prelude::ThreadRng = rand::thread_rng();
     let coord_x = rand.gen_range(0..board.len());
     let top_coord_y = rand.gen_range(0..board.len() - length - 1);
-    
+
     let mut vec: Vec<Coord> = Vec::new();
     for y in top_coord_y..top_coord_y + length {
-        vec.push(Coord{x: coord_x as u32, y: y as u32});
+        vec.push(Coord {
+            x: coord_x as u32,
+            y: y as u32,
+        });
     }
     vec
 }

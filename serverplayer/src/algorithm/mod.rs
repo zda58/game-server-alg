@@ -1,4 +1,4 @@
 pub mod algorithmmodel;
-pub mod randomboardgen;
 mod horizontaliterator;
+pub mod randomboardgen;
 mod verticaliterator;

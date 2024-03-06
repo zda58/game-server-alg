@@ -1,23 +1,41 @@
-use std::{arch::x86_64::_CMP_LE_OQ, borrow::BorrowMut, cmp::Ordering, collections::HashSet, io::{self, BufRead, BufReader, Read, Write}, net::TcpStream, process::exit};
+use std::{
+    arch::x86_64::_CMP_LE_OQ,
+    borrow::BorrowMut,
+    cmp::Ordering,
+    collections::HashSet,
+    io::{self, BufRead, BufReader, Read, Write},
+    net::TcpStream,
+    process::exit,
+};
 
 use shipjson::json::gamestate::CurrentGameState;
 
-use crate::{data::{coord::Coord, ship::Ship}, gamestate::{GameResult, GameState}, shipjson::json::{jsoncoord::JsonCoord, gamesetup::GameSetup, report::Report, shipinfo::{ShipCoord, ShipInfo}, shots::{ShotRequest, Shots}}};
-use crate::gamestate::GameTurn::{P1Turn, P2Turn, InBetween};
-use shipjson::json::gamestate::CurrentGameState::{Win, Loss, Draw, Ongoing};
+use crate::gamestate::GameTurn::{InBetween, P1Turn, P2Turn};
+use crate::{
+    data::{coord::Coord, ship::Ship},
+    gamestate::{GameResult, GameState},
+    shipjson::json::{
+        gamesetup::GameSetup,
+        jsoncoord::JsonCoord,
+        report::Report,
+        shipinfo::{ShipCoord, ShipInfo},
+        shots::{ShotRequest, Shots},
+    },
+};
+use shipjson::json::gamestate::CurrentGameState::{Draw, Loss, Ongoing, Win};
 
 pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
     let mut p1reader = BufReader::new(&p1stream);
     let mut p2reader = BufReader::new(&p2stream);
     println!("ddiodjidji");
-    let setup = GameSetup::new(15, 15, 3, 3, 3, 3); 
-    let p1info: ShipInfo = generate_info(&mut p1reader,&p1stream, &setup).unwrap();
-    let p2info: ShipInfo = generate_info(&mut p2reader, &p2stream, &setup).unwrap();
+    let setup = GameSetup::new(15, 15, 3, 3, 3, 3);
+    let p1info: ShipInfo = generate_info(&mut p1reader, &p1stream, &setup);
+    let p2info: ShipInfo = generate_info(&mut p2reader, &p2stream, &setup);
     println!("ddddd");
     let mut game = GameState::new(&setup, &p1info, &p2info);
     let mut p1state: CurrentGameState = Ongoing;
     let mut p2state: CurrentGameState = Ongoing;
-    println!("Init game");  
+    println!("Init game");
     let mut idx = 0;
     loop {
         idx += 1;
@@ -48,49 +66,51 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
         println!("{}", idx);
         println!("eee");
         //match game.turn {
-            //P1Turn => {
-                println!("p1turn");
-                let shot_request = ShotRequest {
-                    shots: p1shotcount
-                };
-                p1shots = Some(get_shots(&mut p1reader, &p1stream, &shot_request, &setup).unwrap().shots);
-                game.turn = P2Turn;
-            //},
-            //P2Turn => {
-                println!("p2turn");
-                let shot_request = ShotRequest {
-                    shots: p2shotcount
-                };
-                p2shots = Some(get_shots(&mut p2reader, &p2stream, &shot_request, &setup).unwrap().shots);
-                game.turn = InBetween;
-            //},
-            //InBetween => {
-                println!("inbetween");
-                let mut p1_damaged_coords: Vec<Coord> = Vec::new();
-                let mut p2_damaged_coords: Vec<Coord> = Vec::new();
-                for ship in &mut game.p1ships {
-                    for coord in &p2shots.clone().unwrap() {
-                        ship.shoot_at(&Coord {x: coord.x, y: coord.y});
-                    }
-                }
-                for ship in &mut game.p2ships {
-                    for coord in &p1shots.clone().unwrap() {
-                        ship.shoot_at(&Coord {x: coord.x, y: coord.y});
-                    }
-                }
-                
-                for ship in &mut game.p2ships {
-                    p2_damaged_coords.append(&mut ship.get_hit_coords());
-                }
-                for ship in &mut game.p1ships {
-                    p1_damaged_coords.append(&mut ship.get_hit_coords());
-                }
+        //P1Turn => {
+        println!("p1turn");
+        let shot_request = ShotRequest { shots: p1shotcount };
+        p1shots = Some(get_shots(&mut p1reader, &p1stream, &shot_request, &setup).shots);
+        game.turn = P2Turn;
+        //},
+        //P2Turn => {
+        println!("p2turn");
+        let shot_request = ShotRequest { shots: p2shotcount };
+        p2shots = Some(get_shots(&mut p2reader, &p2stream, &shot_request, &setup).shots);
+        game.turn = InBetween;
+        //},
+        //InBetween => {
+        println!("inbetween");
+        let mut p1_damaged_coords: Vec<Coord> = Vec::new();
+        let mut p2_damaged_coords: Vec<Coord> = Vec::new();
+        for ship in &mut game.p1ships {
+            for coord in &p2shots.clone().unwrap() {
+                ship.shoot_at(&Coord {
+                    x: coord.x,
+                    y: coord.y,
+                });
+            }
+        }
+        for ship in &mut game.p2ships {
+            for coord in &p1shots.clone().unwrap() {
+                ship.shoot_at(&Coord {
+                    x: coord.x,
+                    y: coord.y,
+                });
+            }
+        }
 
-                report_shots(&p1stream, &p2_damaged_coords, &p1_damaged_coords);
-                report_shots(&p2stream, &p1_damaged_coords, &p2_damaged_coords);
+        for ship in &mut game.p2ships {
+            p2_damaged_coords.append(&mut ship.get_hit_coords());
+        }
+        for ship in &mut game.p1ships {
+            p1_damaged_coords.append(&mut ship.get_hit_coords());
+        }
 
-                game.turn = P1Turn;
-            //}
+        report_shots(&p1stream, &p2_damaged_coords, &p1_damaged_coords);
+        report_shots(&p2stream, &p1_damaged_coords, &p2_damaged_coords);
+
+        game.turn = P1Turn;
+        //}
         //}
     }
     report_game_state(&p1stream, &p1state);
@@ -99,12 +119,10 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
 
 fn report_shot_count(stream: &TcpStream, shot_count: i32) {
     let mut writer = stream.try_clone().unwrap();
-    let shot_request = ShotRequest {
-        shots: shot_count
-    };
+    let shot_request = ShotRequest { shots: shot_count };
     let shot_info = serde_json::to_string(&shot_request).unwrap();
     let write_data = format!("{}\n", shot_info);
-    
+
     writer.write_all(write_data.as_bytes());
     writer.flush();
     println!("reported shot count");
@@ -117,11 +135,15 @@ fn get_shot_counts(ships: &Vec<Ship>) -> i32 {
             count += 1;
         }
     }
-    count 
+    count
 }
 
-fn get_shots(reader: &mut BufReader<&TcpStream>, mut writer: &TcpStream, shots: &ShotRequest, setup: &GameSetup) -> io::Result<(Shots)> { 
-
+fn get_shots(
+    reader: &mut BufReader<&TcpStream>,
+    mut writer: &TcpStream,
+    shots: &ShotRequest,
+    setup: &GameSetup,
+) -> Shots {
     let shot_info = serde_json::to_string(&shots).unwrap();
     let write_data = format!("{}\n", shot_info);
     writer.write_all(write_data.as_bytes());
@@ -139,10 +161,10 @@ fn get_shots(reader: &mut BufReader<&TcpStream>, mut writer: &TcpStream, shots: 
                 match serde_json::from_str::<Shots>(&buffer) {
                     Ok(info) => {
                         if validate_shot_info(&info, &shots, &setup) {
-                            return Ok(info);
+                            return info;
                         }
                     }
-                    _ => ()
+                    _ => (),
                 };
                 println!("Received data from server: {}", buffer);
             }
@@ -158,7 +180,7 @@ fn get_shots(reader: &mut BufReader<&TcpStream>, mut writer: &TcpStream, shots: 
 }
 
 fn validate_shot_info(shots: &Shots, request: &ShotRequest, setup: &GameSetup) -> bool {
-    if shots.shots.len() != request.shots as usize{
+    if shots.shots.len() != request.shots as usize {
         return false;
     }
     for shot in &shots.shots {
@@ -172,34 +194,42 @@ fn validate_shot_info(shots: &Shots, request: &ShotRequest, setup: &GameSetup) -
     true
 }
 
-fn report_shots(stream: &TcpStream, hit_shots: &Vec<Coord>, damaged_coords: &Vec<Coord>) -> io::Result<()> { 
-    let mut writer = stream.try_clone()?;
+fn report_shots(stream: &TcpStream, hit_shots: &Vec<Coord>, damaged_coords: &Vec<Coord>) {
+    let mut writer = stream.try_clone().unwrap();
 
     let mut hit_shots_json: Vec<JsonCoord> = Vec::with_capacity(hit_shots.len());
     for coord in hit_shots {
-        hit_shots_json.push(JsonCoord {x: coord.x, y: coord.y});
+        hit_shots_json.push(JsonCoord {
+            x: coord.x,
+            y: coord.y,
+        });
     }
     let mut damaged_coords_json: Vec<JsonCoord> = Vec::with_capacity(damaged_coords.len());
     for coord in damaged_coords {
-        damaged_coords_json.push(JsonCoord {x: coord.x, y: coord.y});
+        damaged_coords_json.push(JsonCoord {
+            x: coord.x,
+            y: coord.y,
+        });
     }
-    
+
     let report = Report {
         shots_hit: hit_shots_json,
-        coords_damaged: damaged_coords_json
+        coords_damaged: damaged_coords_json,
     };
 
     let shot_info = serde_json::to_string::<Report>(&report).unwrap();
     println!("reported shots!");
     let write_data = format!("{}\n", shot_info);
-    writer.write_all(write_data.as_bytes())?;
-    writer.flush()?;
-
-    Ok(())
+    writer.write_all(write_data.as_bytes());
+    writer.flush();
 }
 
-fn generate_info(reader: &mut BufReader<&TcpStream>, stream: &TcpStream, setup: &GameSetup) -> io::Result<(ShipInfo)> { 
-    let mut writer = stream.try_clone()?;
+fn generate_info(
+    reader: &mut BufReader<&TcpStream>,
+    stream: &TcpStream,
+    setup: &GameSetup,
+) -> ShipInfo {
+    let mut writer = stream.try_clone().unwrap();
 
     let game_info = serde_json::to_string(&setup).unwrap();
     let write_data = format!("{}\n", game_info);
@@ -217,7 +247,7 @@ fn generate_info(reader: &mut BufReader<&TcpStream>, stream: &TcpStream, setup: 
         }
         Err(_) => {
             println!("2 failed")
-        },
+        }
     }
 
     /*
@@ -236,7 +266,7 @@ fn generate_info(reader: &mut BufReader<&TcpStream>, stream: &TcpStream, setup: 
                 let request = serde_json::from_str::<ShipInfo>(&buffer).unwrap();
                 println!("Received data from server: {}", buffer);
                 if validate_setup_info(&request, &setup) {
-                    return Ok(request);
+                    return request;
                 }
                 println!("validation failed");
             }
@@ -259,13 +289,14 @@ fn validate_setup_info(ship_info: &ShipInfo, setup: &GameSetup) -> bool {
     let carriers = setup.carriers;
 
     if (submarines != ship_info.submarines.len() as i32
-    || destroyers != ship_info.destroyers.len() as i32
-    || battleships != ship_info.battleships.len() as i32
-    || carriers != ship_info.carriers.len() as i32) {
+        || destroyers != ship_info.destroyers.len() as i32
+        || battleships != ship_info.battleships.len() as i32
+        || carriers != ship_info.carriers.len() as i32)
+    {
         println!("1");
-        return false;        
+        return false;
     }
-    let mut coords: HashSet<Coord> = HashSet::new(); 
+    let mut coords: HashSet<Coord> = HashSet::new();
     for submarine in &ship_info.submarines {
         if !validate_ship_coords(setup, 3, submarine, &mut coords) {
             println!("2");
@@ -293,48 +324,61 @@ fn validate_setup_info(ship_info: &ShipInfo, setup: &GameSetup) -> bool {
     return true;
 }
 
-fn validate_ship_coords(setup: &GameSetup, shiplen: i32, coord: &ShipCoord, coords: &mut HashSet<Coord>) -> bool {
-    let height= setup.height;
+fn validate_ship_coords(
+    setup: &GameSetup,
+    shiplen: i32,
+    coord: &ShipCoord,
+    coords: &mut HashSet<Coord>,
+) -> bool {
+    let height = setup.height;
     let width = setup.width;
     if coord.horizontal {
-        if (coord.x < 0 || coord.x > width - shiplen) 
-        || (coord.y < 0 || coord.y > height) {
+        if (coord.x < 0 || coord.x > width - shiplen) || (coord.y < 0 || coord.y > height) {
             println!("01");
             return false;
         }
         for i in 0..shiplen {
-            if coords.contains(&Coord{x: coord.x + i, y: coord.y}) {
+            if coords.contains(&Coord {
+                x: coord.x + i,
+                y: coord.y,
+            }) {
                 println!("02");
-                return false; 
+                return false;
             } else {
-                coords.insert(Coord{x: coord.x + i, y: coord.y});
+                coords.insert(Coord {
+                    x: coord.x + i,
+                    y: coord.y,
+                });
             }
         }
     } else {
-        if (coord.x < 0 || coord.x > width) 
-        || (coord.y < 0 || coord.y > height - shiplen) {
+        if (coord.x < 0 || coord.x > width) || (coord.y < 0 || coord.y > height - shiplen) {
             println!("03");
             return false;
         }
         for i in 0..shiplen {
-            if coords.contains(&Coord{x: coord.x, y: coord.y + i}) {
+            if coords.contains(&Coord {
+                x: coord.x,
+                y: coord.y + i,
+            }) {
                 println!("04");
-                return false; 
+                return false;
             } else {
-                coords.insert(Coord{x: coord.x, y: coord.y + i});
+                coords.insert(Coord {
+                    x: coord.x,
+                    y: coord.y + i,
+                });
             }
         }
     }
     return true;
 }
 
-fn report_game_state(stream: &TcpStream, result: &CurrentGameState) -> io::Result<()>{
-    let mut writer = stream.try_clone()?;
+fn report_game_state(stream: &TcpStream, result: &CurrentGameState) {
+    let mut writer = stream.try_clone().unwrap();
 
     let game_info = serde_json::to_string(&result).unwrap();
     let write_data = format!("{}\n", game_info);
-    writer.write_all(write_data.as_bytes())?;
-    writer.flush()?;
-
-    Ok(())
+    writer.write_all(write_data.as_bytes());
+    writer.flush();
 }

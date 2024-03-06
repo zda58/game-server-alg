@@ -1,3 +1,3 @@
 pub struct Result {
-    result: String 
+    result: String,
 }

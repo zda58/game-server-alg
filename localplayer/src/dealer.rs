@@ -1,31 +1,31 @@
-use std::collections::HashMap;
 use crate::data::coordinates::coord::Coord;
 use crate::data::coordinates::owncoord::OwnCoord;
-use crate::data::ship::shippiece::{ShipPiece, ShipType};
-use crate::player::algorithmplayer::{AlgorithmPlayer};
 use crate::data::game::GameState;
+use crate::data::ship::shippiece::{ShipPiece, ShipType};
+use crate::player::algorithmplayer::AlgorithmPlayer;
+use std::collections::HashMap;
 
 pub struct Dealer {
     pub player1: AlgorithmPlayer,
-    pub player2: AlgorithmPlayer
+    pub player2: AlgorithmPlayer,
 }
 
 impl Dealer {
     pub fn run(&mut self) -> GameState {
         let mut count: u32 = 0;
 
-        let mut ships: HashMap<ShipType, u32> = HashMap::from ([
+        let mut ships: HashMap<ShipType, u32> = HashMap::from([
             (ShipType::Submarine, 3),
             (ShipType::Destroyer, 3),
             (ShipType::Battleship, 3),
-            (ShipType::Carrier, 3)
+            (ShipType::Carrier, 3),
         ]);
-        
+
         let mut game_state = GameState::Ongoing;
-        
+
         while game_state == GameState::Ongoing {
             let p1shots: Vec<Coord> = self.player1.take_shots();
-            let p2shots : Vec<Coord> = self.player2.take_shots();
+            let p2shots: Vec<Coord> = self.player2.take_shots();
 
             let p1hits: Vec<Coord> = self.player2.report_damage(p1shots);
             let p2hits: Vec<Coord> = self.player1.report_damage(p2shots);
@@ -50,7 +50,7 @@ fn print_board(board: &Vec<Vec<OwnCoord>>) {
         for x in 0..width {
             match &board[y][x].ship {
                 Some(cell) => print!(" {} ", cell.borrow_mut().ship_type.symbol()),
-                None => print!(" n ")
+                None => print!(" n "),
             }
         }
         println!()

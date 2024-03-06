@@ -1,9 +1,21 @@
+use crate::data::{
+    coordinates::{
+        coord::{self, Coord},
+        owncoord::{generate_null_coord, OwnCoord},
+        statecoord::StateCoord,
+    },
+    ship::shippiece::{ShipPiece, ShipType},
+};
 use rand::Rng;
-use shipjson::json::{gamesetup::GameSetup, shipinfo::{ShipCoord, ShipInfo}};
+use shipjson::json::{
+    gamesetup::GameSetup,
+    shipinfo::{ShipCoord, ShipInfo},
+};
 use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
-use crate::data::{coordinates::{coord::{self, Coord}, owncoord::{generate_null_coord, OwnCoord}, statecoord::StateCoord}, ship::shippiece::{ShipPiece, ShipType}};
 
-pub fn generate_board(setup: &GameSetup) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<ShipPiece>>>, ShipInfo) {
+pub fn generate_board(
+    setup: &GameSetup,
+) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<ShipPiece>>>, ShipInfo) {
     let mut rand = rand::thread_rng();
     let mut board: Vec<Vec<OwnCoord>> = Vec::new();
     let mut valid_board = false;
@@ -41,7 +53,7 @@ pub fn generate_board(setup: &GameSetup) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<
                     ship_type: shiptype,
                     coords: rand_coords.clone(),
                     destroyed_coords: Vec::new(),
-                    reported_hit_coords: Vec::new()
+                    reported_hit_coords: Vec::new(),
                 };
 
                 let central_coord = rand_coords[0].clone();
@@ -49,20 +61,21 @@ pub fn generate_board(setup: &GameSetup) -> (Vec<Vec<OwnCoord>>, Vec<Rc<RefCell<
                 let json_coord: ShipCoord = ShipCoord {
                     horizontal: horizontal,
                     x: central_coord.x as i32,
-                    y: central_coord.y as i32
+                    y: central_coord.y as i32,
                 };
 
                 match shiptype {
                     ShipType::Submarine => ships_json.submarines.push(json_coord),
                     ShipType::Destroyer => ships_json.destroyers.push(json_coord),
                     ShipType::Battleship => ships_json.battleships.push(json_coord),
-                    ShipType::Carrier => ships_json.carriers.push(json_coord)
+                    ShipType::Carrier => ships_json.carriers.push(json_coord),
                 }
 
                 let ship_rc = Rc::new(RefCell::new(ship));
 
                 for statecoord in rand_coords {
-                    let coord: &mut OwnCoord = &mut board[statecoord.y as usize][statecoord.x as usize];
+                    let coord: &mut OwnCoord =
+                        &mut board[statecoord.y as usize][statecoord.x as usize];
                     if coord.is_empty() {
                         coord.ship = Some(Rc::clone(&ship_rc));
                     } else {
@@ -86,7 +99,10 @@ fn generate_horizontal_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> 
 
     let mut vec: Vec<Coord> = Vec::new();
     for x in left_coord_x..left_coord_x + length {
-        vec.push(Coord{x: x as i32, y: coord_y as i32});
+        vec.push(Coord {
+            x: x as i32,
+            y: coord_y as i32,
+        });
     }
     vec
 }
@@ -95,10 +111,13 @@ fn generate_vertical_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> Ve
     let mut rand: rand::prelude::ThreadRng = rand::thread_rng();
     let coord_x = rand.gen_range(0..board.len());
     let top_coord_y = rand.gen_range(0..board.len() - length - 1);
-    
+
     let mut vec: Vec<Coord> = Vec::new();
     for y in top_coord_y..top_coord_y + length {
-        vec.push(Coord{x: coord_x as i32, y: y as i32});
+        vec.push(Coord {
+            x: coord_x as i32,
+            y: y as i32,
+        });
     }
     vec
 }

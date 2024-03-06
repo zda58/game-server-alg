@@ -9,17 +9,18 @@ pub struct OwnCoord {
     pub x: i32,
     pub y: i32,
     pub ship: Option<Rc<RefCell<ShipPiece>>>,
-    pub shot: bool
+    pub shot: bool,
 }
 
 impl OwnCoord {
     pub fn get_shot(&mut self) {
         self.shot = true;
         match &self.ship {
-            Some(ship) => {
-                ship.borrow_mut().get_shot(Coord {x: self.x, y: self.y})
-            },
-            _ => ()
+            Some(ship) => ship.borrow_mut().get_shot(Coord {
+                x: self.x,
+                y: self.y,
+            }),
+            _ => (),
         }
     }
 
@@ -37,12 +38,12 @@ impl OwnCoord {
         match self.ship {
             Some(_) => {
                 let rc: Rc<RefCell<ShipPiece>> = Rc::clone(&self.ship.as_ref().unwrap());
-                let refcell = <Rc<RefCell<ShipPiece>> as std::borrow::Borrow<RefCell<ShipPiece>>>::borrow(&rc);
-                format!(
-                    "{}",
-                    refcell.borrow().symbol()
-                )
-            },
+                let refcell =
+                    <Rc<RefCell<ShipPiece>> as std::borrow::Borrow<RefCell<ShipPiece>>>::borrow(
+                        &rc,
+                    );
+                format!("{}", refcell.borrow().symbol())
+            }
             None => ".".to_string(),
         }
     }
@@ -53,6 +54,6 @@ pub fn generate_null_coord() -> OwnCoord {
         x: 0,
         y: 0,
         ship: None,
-        shot: false
+        shot: false,
     }
 }

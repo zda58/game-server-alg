@@ -8,7 +8,7 @@ pub struct ShipPiece {
     pub ship_type: ShipType,
     pub coords: Vec<Coord>,
     pub destroyed_coords: Vec<Coord>,
-    pub reported_hit_coords: Vec<Coord>
+    pub reported_hit_coords: Vec<Coord>,
 }
 
 impl ShipPiece {
@@ -25,9 +25,8 @@ impl ShipPiece {
         reported_coords_temp
     }
 
-
     pub fn is_destroyed(&self) -> bool {
-        self.coords.len() == self.destroyed_coords.len() 
+        self.coords.len() == self.destroyed_coords.len()
     }
 
     pub fn symbol(&self) -> String {
@@ -40,7 +39,7 @@ pub enum ShipType {
     Submarine,
     Destroyer,
     Battleship,
-    Carrier
+    Carrier,
 }
 
 impl ShipType {
@@ -49,7 +48,7 @@ impl ShipType {
             ShipType::Submarine => 3,
             ShipType::Destroyer => 4,
             ShipType::Battleship => 5,
-            ShipType::Carrier => 6
+            ShipType::Carrier => 6,
         }
     }
 
@@ -58,7 +57,7 @@ impl ShipType {
             ShipType::Submarine => "S",
             ShipType::Destroyer => "D",
             ShipType::Battleship => "B",
-            ShipType::Carrier => "C"
+            ShipType::Carrier => "C",
         }
     }
 }

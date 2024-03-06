@@ -4,27 +4,19 @@ mod dealer;
 mod player;
 
 use data::coordinates::coord::Coord;
-use data::ship;
+use player::algorithmplayer::AlgorithmPlayer;
 use shipjson;
-use shipjson::json::gamesetup::{self, GameSetup};
+use shipjson::json::gamesetup::GameSetup;
 use shipjson::json::gamestate::CurrentGameState;
-use shipjson::json::gamestate::{CurrentGameState::{Win, Loss, Draw, Ongoing}};
+use shipjson::json::gamestate::CurrentGameState::{Draw, Loss, Ongoing, Win};
 use shipjson::json::jsoncoord::JsonCoord;
 use shipjson::json::report::Report;
 use shipjson::json::shipinfo::ShipInfo;
-use shipjson::json::shots::{self, ShotRequest, Shots};
-use std::collections::HashMap;
-use std::fs::read;
-use std::process::exit;
-//use data::{game};
-use player::algorithmplayer::{AlgorithmPlayer};
+use shipjson::json::shots::{ShotRequest, Shots};
 //use dealer;
-use data::ship::shippiece::ShipType;
-use std::io::{self, BufRead, BufReader, Read, Write};
+use std::io::{self, BufRead, BufReader, Write};
 use std::net::TcpStream;
-
-use serde_json::{Deserializer, Serializer};
-
+use std::process::exit;
 
 fn main() {
     let mut server_stream = connect_to_server_stream();
@@ -51,7 +43,7 @@ fn connect_to_server_stream() -> TcpStream {
     TcpStream::connect(server_address).expect("Failed to connect")
 }
 
-fn get_game_setup(reader: &mut BufReader<TcpStream>) -> GameSetup{
+fn get_game_setup(reader: &mut BufReader<TcpStream>) -> GameSetup {
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
@@ -61,7 +53,10 @@ fn get_game_setup(reader: &mut BufReader<TcpStream>) -> GameSetup{
             }
             Ok(n) => {
                 let setup = serde_json::from_str::<GameSetup>(&buffer).unwrap();
-                println!("setup: {} {} {}", setup.battleships, setup.height, setup.carriers);
+                println!(
+                    "setup: {} {} {}",
+                    setup.battleships, setup.height, setup.carriers
+                );
                 println!("Received data from server: {}", buffer);
                 return setup;
             }
@@ -111,7 +106,11 @@ fn get_shot_count(reader: &mut BufReader<TcpStream>) -> ShotRequest {
     }
 }
 
-fn begin_game_loop(server_stream: &TcpStream, reader: &mut BufReader<TcpStream>, mut player: AlgorithmPlayer) {
+fn begin_game_loop(
+    server_stream: &TcpStream,
+    reader: &mut BufReader<TcpStream>,
+    mut player: AlgorithmPlayer,
+) {
     let mut game_state: Option<CurrentGameState> = None;
     loop {
         game_state = Some(get_game_state(reader));
@@ -121,27 +120,31 @@ fn begin_game_loop(server_stream: &TcpStream, reader: &mut BufReader<TcpStream>,
             Draw => break,
             Ongoing => (),
         }
-        println!("1");
         let shot_request = get_shot_count(reader);
-        println!("2");
         let shots = player.take_shots();
         let mut json_shots: Vec<JsonCoord> = Vec::with_capacity(shots.len());
         for shot in shots {
-            json_shots.push(JsonCoord {x: shot.x, y: shot.y});
+            json_shots.push(JsonCoord {
+                x: shot.x,
+                y: shot.y,
+            });
         }
-        let response: Shots = Shots {shots: json_shots};
-        println!("3");
+        let response: Shots = Shots { shots: json_shots };
         report_shots(&server_stream, response);
-        println!("4");
         let report = get_report(reader);
-        println!("5");
         let mut damaged_coords: Vec<Coord> = Vec::with_capacity(report.coords_damaged.len());
         for shot in report.coords_damaged {
-            damaged_coords.push(Coord{x: shot.x, y: shot.y});
+            damaged_coords.push(Coord {
+                x: shot.x,
+                y: shot.y,
+            });
         }
         let mut successful_hits: Vec<Coord> = Vec::with_capacity(report.shots_hit.len());
         for shot in report.shots_hit {
-            successful_hits.push(Coord{x: shot.x, y: shot.y});
+            successful_hits.push(Coord {
+                x: shot.x,
+                y: shot.y,
+            });
         }
         player.report_damage(damaged_coords);
         player.record_successful_hits(successful_hits);
@@ -179,16 +182,14 @@ fn get_game_state(reader: &mut BufReader<TcpStream>) -> CurrentGameState {
 }
 
 fn report_shots(server_stream: &TcpStream, shots: Shots) {
-    println!("reporting shots");
     let mut writer = server_stream.try_clone().unwrap();
     let ship_info = serde_json::to_string(&shots).unwrap();
     let write_data = format!("{}\n", ship_info);
     writer.write_all(write_data.as_bytes());
     writer.flush();
-    println!("reporting shots done");
 }
 
-fn get_report(reader: &mut BufReader<TcpStream>, ) -> Report {
+fn get_report(reader: &mut BufReader<TcpStream>) -> Report {
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
@@ -197,7 +198,6 @@ fn get_report(reader: &mut BufReader<TcpStream>, ) -> Report {
                 exit(0);
             }
             Ok(n) => {
-                println!("buffer contains::::: {}", buffer);
                 let report = serde_json::from_str::<Report>(&buffer).unwrap();
                 println!("received data: {}", buffer);
                 return report;
@@ -212,48 +212,3 @@ fn get_report(reader: &mut BufReader<TcpStream>, ) -> Report {
         }
     }
 }
-
-/*
-
-fn main() {
-    let mut specs: HashMap<ShipType, u32> = HashMap::from ([
-        (ShipType::Submarine, 3),
-        (ShipType::Destroyer, 3),
-        (ShipType::Battleship, 3),
-        (ShipType::Carrier, 3)
-    ]);
-    let width = 15;
-    let height = 15;
-
-    let mut p1wins = 0;
-    let mut p2wins = 0;
-    let mut draws = 0;
-    for i in 1..=1000 {
-        let player1 = 
-        AlgorithmPlayer::new("player1".to_string(), &specs, height, width);
-        let player2 = 
-        AlgorithmPlayer::new("player2".to_string(), &specs, height, width);
-        let mut dealer = Dealer {
-            player1: player1,
-            player2: player2
-        };
-        println!("{}", i);
-        match dealer.run() {
-            GameState::P1Win => {
-                p1wins += 1;
-                println!("p1 wins");
-            },
-            GameState::P2Win => {
-                p2wins += 1;
-                println!("p2 wins");
-            },
-            GameState::Draw => {
-                draws += 1;
-                println!("draw");
-            },
-            _ => (),
-        }
-    }
-    println!("p1: {}, p2: {}, draws: {}", p1wins, p2wins, draws);
-}
-*/
