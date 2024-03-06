@@ -18,7 +18,9 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
     let mut p1state: CurrentGameState = Ongoing;
     let mut p2state: CurrentGameState = Ongoing;
     println!("Init game");  
+    let mut idx = 0;
     loop {
+        idx += 1;
         println!("Game Loop");
         let mut p1shots: Option<Vec<JsonCoord>> = None;
         let mut p2shots: Option<Vec<JsonCoord>> = None;
@@ -43,27 +45,33 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
         }
         report_game_state(&p1stream, &p1state);
         report_game_state(&p2stream, &p2state);
-        report_shot_count(&p1stream, p1shotcount);
-        report_shot_count(&p2stream, p2shotcount);
+        println!("{}", idx);
+        if idx == 2 {
+            report_shot_count(&p1stream, 69);
+        report_shot_count(&p2stream, 69);
+        } else {
+            report_shot_count(&p1stream, p1shotcount);
+            report_shot_count(&p2stream, p2shotcount);
+        }
         println!("eee");
-        match game.turn {
-            P1Turn => {
+        //match game.turn {
+            //P1Turn => {
                 println!("p1turn");
                 let shot_request = ShotRequest {
                     shots: p1shotcount
                 };
                 p1shots = Some(get_shots(&mut p1reader, &p1stream, &shot_request, &setup).unwrap().shots);
                 game.turn = P2Turn;
-            },
-            P2Turn => {
+            //},
+            //P2Turn => {
                 println!("p2turn");
                 let shot_request = ShotRequest {
                     shots: p2shotcount
                 };
                 p2shots = Some(get_shots(&mut p2reader, &p2stream, &shot_request, &setup).unwrap().shots);
                 game.turn = InBetween;
-            },
-            InBetween => {
+            //},
+            //InBetween => {
                 println!("inbetween");
                 let mut p1_damaged_coords: Vec<Coord> = Vec::new();
                 let mut p2_damaged_coords: Vec<Coord> = Vec::new();
@@ -89,8 +97,8 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
                 report_shots(&p2stream, &p1_damaged_coords, &p2_damaged_coords);
 
                 game.turn = P1Turn;
-            }
-        }
+            //}
+        //}
     }
     report_game_state(&p1stream, &p1state);
     report_game_state(&p2stream, &p2state);

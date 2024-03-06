@@ -14,6 +14,7 @@ use shipjson::json::report::Report;
 use shipjson::json::shipinfo::ShipInfo;
 use shipjson::json::shots::{self, ShotRequest, Shots};
 use std::collections::HashMap;
+use std::fs::read;
 use std::process::exit;
 //use data::{game};
 use player::algorithmplayer::{AlgorithmPlayer};
@@ -29,14 +30,15 @@ fn main() {
     let mut server_stream = connect_to_server_stream();
     server_stream.set_nonblocking(true);
 
-    let gamesetup: GameSetup = get_game_setup(&server_stream);
+    let mut reader = BufReader::new(server_stream.try_clone().unwrap());
+    let gamesetup: GameSetup = get_game_setup(&mut reader);
 
     let playerinfo = AlgorithmPlayer::new("player1".to_string(), gamesetup);
     let player = playerinfo.0;
     let ship_info = playerinfo.1;
     report_ships(&server_stream, ship_info);
     player.draw_own_board();
-    begin_game_loop(&server_stream, player);
+    begin_game_loop(&server_stream, &mut reader, player);
 }
 
 fn connect_to_server_stream() -> TcpStream {
@@ -49,7 +51,7 @@ fn connect_to_server_stream() -> TcpStream {
     TcpStream::connect(server_address).expect("Failed to connect")
 }
 
-fn get_game_setup(reader: &BufReader<&TcpStream>) -> GameSetup{
+fn get_game_setup(reader: &mut BufReader<TcpStream>) -> GameSetup{
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
@@ -83,7 +85,7 @@ fn report_ships(mut server_stream: &TcpStream, info: ShipInfo) {
     writer.flush();
 }
 
-fn get_shot_count(mut reader: &BufReader<&TcpStream>) -> ShotRequest {
+fn get_shot_count(reader: &mut BufReader<TcpStream>) -> ShotRequest {
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
@@ -109,10 +111,10 @@ fn get_shot_count(mut reader: &BufReader<&TcpStream>) -> ShotRequest {
     }
 }
 
-fn begin_game_loop(server_stream: &TcpStream, mut player: AlgorithmPlayer) {
+fn begin_game_loop(server_stream: &TcpStream, reader: &mut BufReader<TcpStream>, mut player: AlgorithmPlayer) {
     let mut game_state: Option<CurrentGameState> = None;
     loop {
-        game_state = Some(get_game_state(server_stream));
+        game_state = Some(get_game_state(reader));
         match game_state.as_ref().unwrap() {
             Win => break,
             Loss => break,
@@ -120,7 +122,7 @@ fn begin_game_loop(server_stream: &TcpStream, mut player: AlgorithmPlayer) {
             Ongoing => (),
         }
         println!("1");
-        let shot_request = get_shot_count(server_stream);
+        let shot_request = get_shot_count(reader);
         println!("2");
         let shots = player.take_shots();
         let mut json_shots: Vec<JsonCoord> = Vec::with_capacity(shots.len());
@@ -129,9 +131,9 @@ fn begin_game_loop(server_stream: &TcpStream, mut player: AlgorithmPlayer) {
         }
         let response: Shots = Shots {shots: json_shots};
         println!("3");
-        report_shots(server_stream, response);
+        report_shots(&server_stream, response);
         println!("4");
-        let report = get_report(server_stream);
+        let report = get_report(reader);
         println!("5");
         let mut damaged_coords: Vec<Coord> = Vec::with_capacity(report.coords_damaged.len());
         for shot in report.coords_damaged {
@@ -152,7 +154,7 @@ fn begin_game_loop(server_stream: &TcpStream, mut player: AlgorithmPlayer) {
     }
 }
 
-fn get_game_state(reader: &BufReader<&TcpStream>) -> CurrentGameState {
+fn get_game_state(reader: &mut BufReader<TcpStream>) -> CurrentGameState {
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
@@ -186,7 +188,7 @@ fn report_shots(server_stream: &TcpStream, shots: Shots) {
     println!("reporting shots done");
 }
 
-fn get_report(reader: &BufReader<&TcpStream>, ) -> Report {
+fn get_report(reader: &mut BufReader<TcpStream>, ) -> Report {
     loop {
         let mut buffer = String::new();
         match reader.read_line(&mut buffer) {
@@ -195,7 +197,11 @@ fn get_report(reader: &BufReader<&TcpStream>, ) -> Report {
                 exit(0);
             }
             Ok(n) => {
-                let report = serde_json::from_str::<Report>(&buffer).unwrap();
+                println!("buffer contains::::: {}", buffer);
+                let report = match serde_json::from_str::<Report>(&buffer) {
+                    Ok(val) => val,
+                    Err(e) => continue
+                };
                 println!("received data: {}", buffer);
                 return report;
             }
