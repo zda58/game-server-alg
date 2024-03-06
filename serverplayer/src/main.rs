@@ -198,10 +198,7 @@ fn get_report(reader: &mut BufReader<TcpStream>, ) -> Report {
             }
             Ok(n) => {
                 println!("buffer contains::::: {}", buffer);
-                let report = match serde_json::from_str::<Report>(&buffer) {
-                    Ok(val) => val,
-                    Err(e) => continue
-                };
+                let report = serde_json::from_str::<Report>(&buffer).unwrap();
                 println!("received data: {}", buffer);
                 return report;
             }

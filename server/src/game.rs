@@ -46,13 +46,6 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
         report_game_state(&p1stream, &p1state);
         report_game_state(&p2stream, &p2state);
         println!("{}", idx);
-        if idx == 2 {
-            report_shot_count(&p1stream, 69);
-        report_shot_count(&p2stream, 69);
-        } else {
-            report_shot_count(&p1stream, p1shotcount);
-            report_shot_count(&p2stream, p2shotcount);
-        }
         println!("eee");
         //match game.turn {
             //P1Turn => {
