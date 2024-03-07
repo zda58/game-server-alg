@@ -2,13 +2,13 @@ use game::init_game;
 use local_ip_address::local_ip;
 use std::net::{TcpListener, TcpStream};
 
-use shipjson;
+use serverinfo;
 mod data;
 mod game;
-mod gamestate;
+mod gamedata;
 
 fn main() {
-    let mut streams: (TcpStream, TcpStream) = init_connections();
+    let streams: (TcpStream, TcpStream) = init_connections();
     init_game(streams.0, streams.1);
 }
 
@@ -40,13 +40,3 @@ fn init_connections() -> (TcpStream, TcpStream) {
     println!("Both acquired!");
     (first_stream_option.unwrap(), second_stream_option.unwrap())
 }
-/*
-   let player1: Player = Player {
-       is_turn: false
-   };
-   let player2: Player = Player {
-       is_turn: false
-   };
-   let mut p1ref = Arc::new(Mutex::new(player1));
-   let mut p2ref = Arc::new(Mutex::new(player2));
-*/

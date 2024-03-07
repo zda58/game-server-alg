@@ -1,13 +1,13 @@
 use crate::data::{
     coordinates::{
-        coord::{self, Coord},
         owncoord::{generate_null_coord, OwnCoord},
         statecoord::StateCoord,
     },
     ship::shippiece::{ShipPiece, ShipType},
 };
+use serverinfo::json::coord::Coord;
 use rand::Rng;
-use shipjson::json::{
+use serverinfo::json::{
     gamesetup::GameSetup,
     shipinfo::{ShipCoord, ShipInfo},
 };

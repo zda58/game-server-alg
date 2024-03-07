@@ -1,9 +1,9 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use shipjson::json::gamesetup::{self, GameSetup};
+use serverinfo::json::{coord::Coord, gamesetup::{self, GameSetup}};
 
 use crate::data::{
-    coordinates::{coord::Coord, heatmapcoord::HeatmapCoord},
+    coordinates::{heatmapcoord::HeatmapCoord},
     ship::shippiece::ShipType,
 };
 
@@ -132,14 +132,11 @@ impl AlgorithmModel {
     }
 
     fn reset_heat_map(&mut self) {
-        self.other_board_heat_map
-            .iter_mut()
-            .map(|vec| {
-                vec.iter_mut()
-                    .map(|coord| coord.borrow_mut().heat = 0)
-                    .collect::<Vec<_>>()
-            })
-            .collect::<Vec<_>>();
+        for row in &self.other_board_heat_map {
+            for coord in row {
+                coord.borrow_mut().heat = 0;
+            }
+        }
     }
 
     pub fn record_successful_hits(&mut self, hits: Vec<Coord>) {

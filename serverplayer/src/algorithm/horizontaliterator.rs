@@ -1,6 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::data::coordinates::{coord::Coord, heatmapcoord::HeatmapCoord};
+use serverinfo::json::coord::Coord;
+
+use crate::data::coordinates::{heatmapcoord::HeatmapCoord};
 
 pub struct HorizontalIterator {
     coord: Rc<RefCell<HeatmapCoord>>,

@@ -1,23 +1,22 @@
-use crate::data::coord::Coord;
-use crate::data::{ship::Ship, statecoord::StateCoord};
+use serverinfo::json::coord::Coord;
+use crate::data::ship::Ship;
 use serde::Serialize;
-use shipjson::{
+use serverinfo::{
     self,
     json::{gamesetup::GameSetup, shipinfo::ShipInfo},
 };
 
-pub struct GameState {
-    pub p1board: Vec<Vec<StateCoord>>,
-    pub p2board: Vec<Vec<StateCoord>>,
+pub struct GameData {
+    pub p1board: Vec<Vec<Coord>>,
+    pub p2board: Vec<Vec<Coord>>,
     pub p1ships: Vec<Ship>,
-    pub p2ships: Vec<Ship>,
-    pub turn: GameTurn,
+    pub p2ships: Vec<Ship>
 }
 
-impl GameState {
+impl GameData {
     pub fn new(setup: &GameSetup, p1info: &ShipInfo, p2info: &ShipInfo) -> Self {
         let mut p1board =
-            vec![vec![StateCoord::new(0, 0); setup.width as usize]; setup.height as usize];
+            vec![vec![Coord {x: 0, y: 0}; setup.width as usize]; setup.height as usize];
         for y in 0..setup.height {
             for x in 0..setup.width {
                 p1board[y as usize][x as usize].x = x;
@@ -25,7 +24,7 @@ impl GameState {
             }
         }
         let mut p2board =
-            vec![vec![StateCoord::new(0, 0); setup.width as usize]; setup.height as usize];
+            vec![vec![Coord {x: 0, y: 0}; setup.width as usize]; setup.height as usize];
         for y in 0..setup.height {
             for x in 0..setup.width {
                 p2board[y as usize][x as usize].x = x;
@@ -41,7 +40,6 @@ impl GameState {
             p2board: p2board,
             p1ships: p1ships,
             p2ships: p2ships,
-            turn: GameTurn::P1Turn,
         }
     }
 
@@ -119,12 +117,6 @@ impl GameState {
             ships.push(ship);
         }
     }
-}
-
-pub enum GameTurn {
-    P1Turn,
-    P2Turn,
-    InBetween,
 }
 
 #[derive(Serialize)]

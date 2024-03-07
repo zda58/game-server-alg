@@ -3,4 +3,4 @@ members = [
     "localplayer",
     "serverplayer",
     "server"
-, "shipjson"]
+, "serverinfo"]

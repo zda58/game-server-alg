@@ -1,49 +1,47 @@
-use std::{
-    arch::x86_64::_CMP_LE_OQ,
-    borrow::BorrowMut,
-    cmp::Ordering,
-    collections::HashSet,
-    io::{self, BufRead, BufReader, Read, Write},
-    net::TcpStream,
-    process::exit,
-};
+use std::collections::HashSet;
+use std::io::{self, BufRead, BufReader, Write};
+use std::net::TcpStream;
+use std::process::exit;
 
-use shipjson::json::gamestate::CurrentGameState;
+use serverinfo::json::coord::Coord;
+use serde::{de::DeserializeOwned, Serialize};
+use serverinfo::json::gamestate::CurrentGameState;
 
-use crate::gamestate::GameTurn::{InBetween, P1Turn, P2Turn};
 use crate::{
-    data::{coord::Coord, ship::Ship},
-    gamestate::{GameResult, GameState},
-    shipjson::json::{
+    data::ship::Ship,
+    gamedata::GameData,
+    serverinfo::json::{
         gamesetup::GameSetup,
-        jsoncoord::JsonCoord,
         report::Report,
         shipinfo::{ShipCoord, ShipInfo},
         shots::{ShotRequest, Shots},
     },
 };
-use shipjson::json::gamestate::CurrentGameState::{Draw, Loss, Ongoing, Win};
+use serverinfo::json::gamestate::CurrentGameState::{Draw, Loss, Ongoing, Win};
 
 pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
-    let mut p1reader = BufReader::new(&p1stream);
-    let mut p2reader = BufReader::new(&p2stream);
-    println!("ddiodjidji");
+    let mut p1reader = BufReader::new(p1stream.try_clone().unwrap());
+    let mut p2reader = BufReader::new(p2stream.try_clone().unwrap());
+
     let setup = GameSetup::new(15, 15, 3, 3, 3, 3);
-    let p1info: ShipInfo = generate_info(&mut p1reader, &p1stream, &setup);
-    let p2info: ShipInfo = generate_info(&mut p2reader, &p2stream, &setup);
-    println!("ddddd");
-    let mut game = GameState::new(&setup, &p1info, &p2info);
+
+    report_data_to_client::<GameSetup>(&p1stream, &setup);
+    let p1info: ShipInfo = get_data_from_client::<ShipInfo>(&mut p1reader).unwrap();
+    validate_setup_info(&p1info, &setup);
+
+    report_data_to_client::<GameSetup>(&p2stream, &setup);
+    let p2info: ShipInfo = get_data_from_client::<ShipInfo>(&mut p2reader).unwrap();
+    validate_setup_info(&p1info, &setup);
+
+    let mut game = GameData::new(&setup, &p1info, &p2info);
     let mut p1state: CurrentGameState = Ongoing;
     let mut p2state: CurrentGameState = Ongoing;
-    println!("Init game");
-    let mut idx = 0;
+
     loop {
-        idx += 1;
-        println!("Game Loop");
-        let mut p1shots: Option<Vec<JsonCoord>> = None;
-        let mut p2shots: Option<Vec<JsonCoord>> = None;
-        let mut p1shotcount = get_shot_counts(&game.p1ships);
-        let mut p2shotcount = get_shot_counts(&game.p2ships);
+        let mut p1shots: Option<Vec<Coord>> = None;
+        let mut p2shots: Option<Vec<Coord>> = None;
+        let p1shotcount = get_shot_counts(&game.p1ships);
+        let p2shotcount = get_shot_counts(&game.p2ships);
         if p1shotcount == 0 {
             if p2shotcount == 0 {
                 p1state = Draw;
@@ -61,25 +59,20 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
                 break;
             }
         }
-        report_game_state(&p1stream, &p1state);
-        report_game_state(&p2stream, &p2state);
-        println!("{}", idx);
-        println!("eee");
-        //match game.turn {
-        //P1Turn => {
-        println!("p1turn");
+        report_data_to_client::<CurrentGameState>(&p1stream, &p1state);
+        report_data_to_client::<CurrentGameState>(&p2stream, &p2state);
+        
         let shot_request = ShotRequest { shots: p1shotcount };
-        p1shots = Some(get_shots(&mut p1reader, &p1stream, &shot_request, &setup).shots);
-        game.turn = P2Turn;
-        //},
-        //P2Turn => {
-        println!("p2turn");
+        report_data_to_client::<ShotRequest>(&p1stream, &shot_request);
+        p1shots = Some(get_data_from_client::<Shots>(&mut p1reader).unwrap().shots);
+        validate_shot_info(p1shots.as_ref().unwrap(), &shot_request, &setup);
+        
+        
         let shot_request = ShotRequest { shots: p2shotcount };
-        p2shots = Some(get_shots(&mut p2reader, &p2stream, &shot_request, &setup).shots);
-        game.turn = InBetween;
-        //},
-        //InBetween => {
-        println!("inbetween");
+        report_data_to_client::<ShotRequest>(&p2stream, &shot_request);
+        p2shots = Some(get_data_from_client::<Shots>(&mut p2reader).unwrap().shots);
+        validate_shot_info(p2shots.as_ref().unwrap(), &shot_request, &setup);
+        
         let mut p1_damaged_coords: Vec<Coord> = Vec::new();
         let mut p2_damaged_coords: Vec<Coord> = Vec::new();
         for ship in &mut game.p1ships {
@@ -106,180 +99,19 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream) {
             p1_damaged_coords.append(&mut ship.get_hit_coords());
         }
 
-        report_shots(&p1stream, &p2_damaged_coords, &p1_damaged_coords);
-        report_shots(&p2stream, &p1_damaged_coords, &p2_damaged_coords);
-
-        game.turn = P1Turn;
-        //}
-        //}
+        let p1report = Report {
+            shots_hit: p2_damaged_coords.clone(),
+            coords_damaged: p1_damaged_coords.clone()
+        };
+        report_data_to_client(&p1stream, &p1report);
+        let p2report = Report {
+            shots_hit: p2_damaged_coords,
+            coords_damaged: p1_damaged_coords
+        };
+        report_data_to_client(&p2stream, &p2report);
     }
-    report_game_state(&p1stream, &p1state);
-    report_game_state(&p2stream, &p2state);
-}
-
-fn report_shot_count(stream: &TcpStream, shot_count: i32) {
-    let mut writer = stream.try_clone().unwrap();
-    let shot_request = ShotRequest { shots: shot_count };
-    let shot_info = serde_json::to_string(&shot_request).unwrap();
-    let write_data = format!("{}\n", shot_info);
-
-    writer.write_all(write_data.as_bytes());
-    writer.flush();
-    println!("reported shot count");
-}
-
-fn get_shot_counts(ships: &Vec<Ship>) -> i32 {
-    let mut count = 0;
-    for ship in ships {
-        if !ship.is_destroyed() {
-            count += 1;
-        }
-    }
-    count
-}
-
-fn get_shots(
-    reader: &mut BufReader<&TcpStream>,
-    mut writer: &TcpStream,
-    shots: &ShotRequest,
-    setup: &GameSetup,
-) -> Shots {
-    let shot_info = serde_json::to_string(&shots).unwrap();
-    let write_data = format!("{}\n", shot_info);
-    writer.write_all(write_data.as_bytes());
-    writer.flush();
-
-    loop {
-        let mut buffer = String::new();
-
-        match reader.read_line(&mut buffer) {
-            Ok(0) => {
-                println!("Server closed!!!!!!!!!!!!");
-                exit(0);
-            }
-            Ok(n) => {
-                match serde_json::from_str::<Shots>(&buffer) {
-                    Ok(info) => {
-                        if validate_shot_info(&info, &shots, &setup) {
-                            return info;
-                        }
-                    }
-                    _ => (),
-                };
-                println!("Received data from server: {}", buffer);
-            }
-            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                std::thread::sleep(std::time::Duration::from_millis(100));
-            }
-            Err(e) => {
-                eprintln!("Error reading from server: {}", e);
-                continue;
-            }
-        }
-    }
-}
-
-fn validate_shot_info(shots: &Shots, request: &ShotRequest, setup: &GameSetup) -> bool {
-    if shots.shots.len() != request.shots as usize {
-        return false;
-    }
-    for shot in &shots.shots {
-        if shot.x < 0 || shot.x >= setup.width {
-            return false;
-        }
-        if shot.y < 0 || shot.y >= setup.height {
-            return false;
-        }
-    }
-    true
-}
-
-fn report_shots(stream: &TcpStream, hit_shots: &Vec<Coord>, damaged_coords: &Vec<Coord>) {
-    let mut writer = stream.try_clone().unwrap();
-
-    let mut hit_shots_json: Vec<JsonCoord> = Vec::with_capacity(hit_shots.len());
-    for coord in hit_shots {
-        hit_shots_json.push(JsonCoord {
-            x: coord.x,
-            y: coord.y,
-        });
-    }
-    let mut damaged_coords_json: Vec<JsonCoord> = Vec::with_capacity(damaged_coords.len());
-    for coord in damaged_coords {
-        damaged_coords_json.push(JsonCoord {
-            x: coord.x,
-            y: coord.y,
-        });
-    }
-
-    let report = Report {
-        shots_hit: hit_shots_json,
-        coords_damaged: damaged_coords_json,
-    };
-
-    let shot_info = serde_json::to_string::<Report>(&report).unwrap();
-    println!("reported shots!");
-    let write_data = format!("{}\n", shot_info);
-    writer.write_all(write_data.as_bytes());
-    writer.flush();
-}
-
-fn generate_info(
-    reader: &mut BufReader<&TcpStream>,
-    stream: &TcpStream,
-    setup: &GameSetup,
-) -> ShipInfo {
-    let mut writer = stream.try_clone().unwrap();
-
-    let game_info = serde_json::to_string(&setup).unwrap();
-    let write_data = format!("{}\n", game_info);
-    match writer.write_all(write_data.as_bytes()) {
-        Ok(_) => {
-            println!("1 succeeded");
-        }
-        Err(_) => {
-            println!("1 failed")
-        }
-    }
-    match writer.flush() {
-        Ok(_) => {
-            println!("2 succeeded");
-        }
-        Err(_) => {
-            println!("2 failed")
-        }
-    }
-
-    /*
-    let received_data = &String::from_utf8_lossy(&buffer[..n]).into_owned();
-                let request = serde_json::from_str::<ShotRequest>(received_data).unwrap();
-     */
-    loop {
-        println!("loop");
-        let mut buffer = String::new();
-        match reader.read_line(&mut buffer) {
-            Ok(0) => {
-                println!("Server closed");
-                exit(0);
-            }
-            Ok(n) => {
-                let request = serde_json::from_str::<ShipInfo>(&buffer).unwrap();
-                println!("Received data from server: {}", buffer);
-                if validate_setup_info(&request, &setup) {
-                    return request;
-                }
-                println!("validation failed");
-            }
-            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                println!("ffffff");
-                std::thread::sleep(std::time::Duration::from_millis(100));
-            }
-            Err(e) => {
-                eprintln!("Error reading from server: {}", e);
-                continue;
-            }
-        }
-    }
+    report_data_to_client::<CurrentGameState>(&p1stream, &p1state);
+    report_data_to_client::<CurrentGameState>(&p2stream, &p2state);
 }
 
 fn validate_setup_info(ship_info: &ShipInfo, setup: &GameSetup) -> bool {
@@ -374,11 +206,58 @@ fn validate_ship_coords(
     return true;
 }
 
-fn report_game_state(stream: &TcpStream, result: &CurrentGameState) {
-    let mut writer = stream.try_clone().unwrap();
+fn validate_shot_info(shots: &Vec<Coord>, request: &ShotRequest, setup: &GameSetup) -> bool {
+    if shots.len() != request.shots as usize {
+        return false;
+    }
+    for shot in shots {
+        if shot.x < 0 || shot.x >= setup.width {
+            return false;
+        }
+        if shot.y < 0 || shot.y >= setup.height {
+            return false;
+        }
+    }
+    true
+}
 
-    let game_info = serde_json::to_string(&result).unwrap();
-    let write_data = format!("{}\n", game_info);
-    writer.write_all(write_data.as_bytes());
-    writer.flush();
+fn get_shot_counts(ships: &Vec<Ship>) -> i32 {
+    let mut count = 0;
+    for ship in ships {
+        if !ship.is_destroyed() {
+            count += 1;
+        }
+    }
+    count
+}
+
+fn get_data_from_client<T: DeserializeOwned>(reader: &mut BufReader<TcpStream>) -> Result<T, io::Error> {
+    loop {
+        let mut buffer = String::new();
+        match reader.read_line(&mut buffer) {
+            Ok(0) => {
+                println!("Server closed");
+                exit(0);
+            }
+            Ok(_) => {
+                match serde_json::from_str::<T>(&buffer) {
+                    Ok(report) => return Ok(report),
+                    Err(e) => return Err(e.into())
+                }
+            }
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+            Err(e) => {
+                return Err(e)
+            }
+        }
+    }
+}
+
+fn report_data_to_client<T: Serialize>(mut stream: &TcpStream, data: &T) {
+    let data = serde_json::to_string(data).unwrap();
+    let write_data = format!("{}\n", data);
+    stream.write_all(write_data.as_bytes());
+    stream.flush();
 }

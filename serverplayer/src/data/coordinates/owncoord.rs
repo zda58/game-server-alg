@@ -2,7 +2,7 @@ use std::{borrow::Borrow, cell::RefCell, rc::Rc};
 
 use crate::data::ship::shippiece::ShipPiece;
 
-use super::coord::Coord;
+use serverinfo::json::coord::Coord;
 
 #[derive(Clone)]
 pub struct OwnCoord {

@@ -191,7 +191,15 @@ dependencies = [
  "local-ip-address",
  "serde",
  "serde_json",
- "shipjson",
+ "serverinfo",
+]
+
+[[package]]
+name = "serverinfo"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -201,15 +209,7 @@ dependencies = [
  "rand",
  "serde",
  "serde_json",
- "shipjson",
-]
-
-[[package]]
-name = "shipjson"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
+ "serverinfo",
 ]
 
 [[package]]

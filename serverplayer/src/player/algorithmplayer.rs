@@ -2,12 +2,12 @@ use std::collections::HashMap;
 
 use std::{cell::RefCell, rc::Rc};
 
-use shipjson::json::gamesetup::GameSetup;
-use shipjson::json::shipinfo::ShipInfo;
+use serverinfo::json::coord::Coord;
+use serverinfo::json::gamesetup::GameSetup;
+use serverinfo::json::shipinfo::ShipInfo;
 
 use crate::algorithm::algorithmmodel::AlgorithmModel;
 use crate::algorithm::randomboardgen;
-use crate::data::coordinates::coord::Coord;
 use crate::data::coordinates::owncoord::OwnCoord;
 use crate::data::coordinates::statecoord::{CoordState, StateCoord};
 use crate::data::ship::shippiece::{ShipPiece, ShipType};

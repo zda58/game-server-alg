@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Serializer};
 use std::ops::Sub;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct GameSetup {
     pub height: i32,
     pub width: i32,

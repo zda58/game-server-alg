@@ -1,6 +1,6 @@
 use std::mem;
+use serverinfo::json::coord::Coord;
 
-use crate::data::coordinates::coord::Coord;
 use crate::data::coordinates::statecoord::StateCoord;
 
 #[derive(Clone)]
