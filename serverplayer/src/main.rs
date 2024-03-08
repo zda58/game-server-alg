@@ -4,7 +4,7 @@ use serde::Serialize;
 use serverinfo;
 use serverinfo::data::coord::Coord;
 use serverinfo::data::gamesetup::GameSetup;
-use serverinfo::data::gamestate::CurrentGameState;
+use serverinfo::data::gamestate::CurrentState;
 use serverinfo::data::gamestate::CurrentGameState::{Draw, Loss, Ongoing, Win};
 use serverinfo::data::report::Report;
 use serverinfo::data::shipinfo::ShipInfo;
@@ -48,10 +48,10 @@ fn begin_game_loop(
     reader: &mut BufReader<TcpStream>,
     mut player: AlgorithmPlayer,
 ) {
-    let mut game_state: CurrentGameState;
+    let mut game_state: CurrentState;
     loop {
-        game_state = get_data_from_server::<CurrentGameState>(reader).unwrap();
-        match game_state {
+        game_state = get_data_from_server::<CurrentState>(reader).unwrap();
+        match game_state.current_state {
             Win => break,
             Loss => break,
             Draw => break,
@@ -87,7 +87,7 @@ fn begin_game_loop(
         player.report_damage(damaged_coords);
         player.record_successful_hits(successful_hits);
     }
-    match game_state {
+    match game_state.current_state {
         Win => println!("WIN"),
         Loss => println!("LOSS"),
         Draw => println!("DRAW"),
@@ -105,10 +105,12 @@ fn get_data_from_server<T: DeserializeOwned>(
                 println!("Server closed");
                 exit(0);
             }
-            Ok(_) => match serde_json::from_str::<T>(&buffer) {
+            Ok(_) => {
+                println!("{}", buffer);
+                match serde_json::from_str::<T>(&buffer) {
                 Ok(report) => return Ok(report),
                 Err(e) => return Err(e.into()),
-            },
+            }},
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }

@@ -117,6 +117,14 @@ impl GameData {
             ships.push(ship);
         }
     }
+    pub fn empty() -> Self {
+        Self {
+            p1board: Vec::new(),
+            p2board: Vec::new(),
+            p1ships: Vec::new(),
+            p2ships: Vec::new(),
+        }
+    }
 }
 
 #[derive(Serialize)]

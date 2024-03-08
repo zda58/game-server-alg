@@ -1,9 +1,10 @@
 use std::io::{self, BufRead, BufReader, Write};
 use std::net::TcpStream;
 
+use relm4::gtk::is_initialized;
 use serde::{de::DeserializeOwned, Serialize};
 use serverinfo::data::coord::Coord;
-use serverinfo::data::gamestate::CurrentGameState;
+use serverinfo::data::gamestate::{CurrentGameState, CurrentState};
 
 use crate::validation::{get_shot_counts, validate_setup_info, validate_shot_info};
 use crate::{
@@ -15,7 +16,123 @@ use crate::{
         shots::{ShotRequest, Shots},
     },
 };
-use serverinfo::data::gamestate::CurrentGameState::{Draw, Loss, Ongoing, Win};
+
+enum GameStage {
+    P1Setup,
+    P2Setup,
+    P1ReportGameState,
+    P2ReportGameState,
+    P1TakeShots,
+    P2TakeShots,
+    P1SendReport,
+    P2SendReport
+}
+
+pub fn init_game_test(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
+    let mut p1_reader = BufReader::new(p1stream.try_clone().unwrap());
+    let mut p2_reader = BufReader::new(p2stream.try_clone().unwrap());
+
+    let mut p1_state: CurrentState = CurrentState {
+        current_state: CurrentGameState::Ongoing
+    };
+    let mut p2_state: CurrentState = CurrentState {
+        current_state: CurrentGameState::Ongoing
+    };
+
+    let mut p1_info: ShipInfo = ShipInfo::new();
+    let mut p2_info: ShipInfo = ShipInfo::new();
+    let mut p1_shot_count = 0;
+    let mut p2_shot_count = 0;
+    let mut game: GameData = GameData::empty();
+    let mut game_stage: GameStage = GameStage::P1Setup;
+    loop {
+        match game_stage {
+            GameStage::P1Setup => {
+                match setup_game(&mut p1_reader, &p1stream, &setup) {
+                    Ok(info) => p1_info = info,
+                    Err(_) => {
+                        p1_state.current_state = CurrentGameState::Loss;
+                        p2_state.current_state = CurrentGameState::Win;
+                        break;
+                    }
+                }
+                game_stage = GameStage::P2Setup;
+            },
+            GameStage::P2Setup => {
+                match setup_game(&mut p2_reader, &p2stream, &setup) {
+                    Ok(info) => p2_info = info,
+                    Err(_) => {
+                        p1_state.current_state = CurrentGameState::Win;
+                        p2_state.current_state = CurrentGameState::Loss;
+                        break;
+                    }
+                }
+                game = GameData::new(&setup, &p1_info, &p2_info);
+                game_stage = GameStage::P1ReportGameState;
+            },
+            GameStage::P1ReportGameState => {
+                p1_shot_count = get_shot_counts(&game.p1ships);
+                p2_shot_count = get_shot_counts(&game.p2ships);
+                if p1_shot_count == 0 {
+                    if p2_shot_count == 0 {
+                        p1_state.current_state = CurrentGameState::Draw;
+                        p2_state.current_state = CurrentGameState::Draw;
+                        break;
+                    } else {
+                        p1_state.current_state = CurrentGameState::Loss;
+                        p2_state.current_state = CurrentGameState::Win;
+                        break;
+                    }
+                } else {
+                    if p2_shot_count == 0 {
+                        p1_state.current_state = CurrentGameState::Win;
+                        p2_state.current_state = CurrentGameState::Loss;
+                        break;
+                    }
+                }
+                match report_data_to_client::<CurrentState>(&p1stream, &p1_state) {
+                    Err(_) => {
+                        p1_state.current_state = CurrentGameState::Loss;
+                        p2_state.current_state = CurrentGameState::Win;
+                        break;
+                    },
+                    _ => ()
+                }
+                game_stage = GameStage::P2ReportGameState;
+            },
+            GameStage::P2ReportGameState => {
+                match report_data_to_client::<CurrentState>(&p1stream, &p1_state) {
+                    Err(_) => {
+                        p1_state.current_state = CurrentGameState::Loss;
+                        p2_state.current_state = CurrentGameState::Win;
+                        return;
+                    },
+                    _ => ()
+                }
+                game_stage = GameStage::P1TakeShots;
+            },
+            GameStage::P1TakeShots => {
+                
+                game_stage = GameStage::P2TakeShots;
+            },
+            GameStage::P2TakeShots => {
+                
+                game_stage = GameStage::P1SendReport;
+            },
+            GameStage::P1SendReport => {
+                
+                game_stage = GameStage::P2SendReport;
+            },
+            GameStage::P2SendReport => {
+                
+                game_stage = GameStage::P1ReportGameState;
+            },
+
+        }
+        
+    }
+    end_game(p1stream, p2stream, p1_state, p2_state)
+}
 
 pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
     let mut p1_reader = BufReader::new(p1stream.try_clone().unwrap());
@@ -23,24 +140,35 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
 
     let p1_info: ShipInfo;
     let p2_info: ShipInfo;
+
+    let mut p1_state: CurrentState = CurrentState {
+        current_state: CurrentGameState::Ongoing
+    };
+    let mut p2_state: CurrentState = CurrentState {
+        current_state: CurrentGameState::Ongoing
+    };
+
     match setup_game(&mut p1_reader, &p1stream, &setup) {
         Ok(info) => p1_info = info,
         Err(_) => {
-            end_game(p1stream, p2stream, Loss, Win);
+            p1_state.current_state = CurrentGameState::Loss;
+            p2_state.current_state = CurrentGameState::Win;
+            end_game(p1stream, p2stream, p1_state, p2_state);
             return;
         }
     }
     match setup_game(&mut p2_reader, &p2stream, &setup) {
         Ok(info) => p2_info = info,
         Err(_) => {
-            end_game(p1stream, p2stream, Win, Loss);
+            p1_state.current_state = CurrentGameState::Win;
+            p2_state.current_state = CurrentGameState::Loss;
+            end_game(p1stream, p2stream, p1_state, p2_state);
             return;
         }
     }
 
     let mut game = GameData::new(&setup, &p1_info, &p2_info);
-    let mut p1_state: CurrentGameState = Ongoing;
-    let mut p2_state: CurrentGameState = Ongoing;
+
 
     let mut p1_shot_count: i32;
     let mut p2_shot_count: i32;
@@ -50,16 +178,20 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         if p1_shot_count == 0 || p2_shot_count == 0 {
             break;
         }
-        match report_data_to_client::<CurrentGameState>(&p1stream, &p1_state) {
+        match report_data_to_client::<CurrentState>(&p1stream, &p1_state) {
             Err(_) => {
-                end_game(p1stream, p2stream, Loss, Win);
+                p1_state.current_state = CurrentGameState::Loss;
+                p2_state.current_state = CurrentGameState::Win;
+                end_game(p1stream, p2stream, p1_state, p2_state);
                 return;
             },
             _ => ()
         }
-        match report_data_to_client::<CurrentGameState>(&p2stream, &p2_state) {
+        match report_data_to_client::<CurrentState>(&p2stream, &p2_state) {
             Err(_) => {
-                end_game(p1stream, p2stream, Loss, Win);
+                p1_state.current_state = CurrentGameState::Win;
+                p2_state.current_state = CurrentGameState::Loss;
+                end_game(p1stream, p2stream, p1_state, p2_state);
                 return;
             },
             _ => ()
@@ -70,7 +202,9 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         };
         match report_data_to_client::<ShotRequest>(&p1stream, &shot_request) {
             Err(_) => {
-                end_game(p1stream, p2stream, Loss, Win);
+                p1_state.current_state = CurrentGameState::Loss;
+                p2_state.current_state = CurrentGameState::Win;
+                end_game(p1stream, p2stream, p1_state, p2_state);
                 return;
             },
             _ => ()
@@ -83,7 +217,9 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         };
         match report_data_to_client::<ShotRequest>(&p2stream, &shot_request) {
             Err(_) => {
-                end_game(p1stream, p2stream, Win, Loss);
+                p1_state.current_state = CurrentGameState::Win;
+                p2_state.current_state = CurrentGameState::Loss;
+                end_game(p1stream, p2stream, p1_state, p2_state);
                 return;
             },
             _ => ()
@@ -123,7 +259,9 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         };
         match report_data_to_client(&p1stream, &p1report) {
             Err(_) => {
-                end_game(p1stream, p2stream, Loss, Win);
+                p1_state.current_state = CurrentGameState::Loss;
+                p2_state.current_state = CurrentGameState::Win;
+                end_game(p1stream, p2stream, p1_state, p2_state);
                 return;
             },
             _ => (),
@@ -134,7 +272,9 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         };
         match report_data_to_client(&p2stream, &p2report) {
             Err(_) => {
-                end_game(p1stream, p2stream, Win, Loss);
+                p1_state.current_state = CurrentGameState::Win;
+                p2_state.current_state = CurrentGameState::Loss;
+                end_game(p1stream, p2stream, p1_state, p2_state);
                 return;
             },
             _ => (),
@@ -142,16 +282,16 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
     }
     if p1_shot_count == 0 {
         if p2_shot_count == 0 {
-            p1_state = Draw;
-            p2_state = Draw;
+            p1_state.current_state = CurrentGameState::Draw;
+            p2_state.current_state = CurrentGameState::Draw;
         } else {
-            p1_state = Loss;
-            p2_state = Win;
+            p1_state.current_state = CurrentGameState::Loss;
+            p2_state.current_state = CurrentGameState::Win;
         }
     } else {
         if p2_shot_count == 0 {
-            p1_state = Win;
-            p2_state = Loss;
+            p1_state.current_state = CurrentGameState::Win;
+            p2_state.current_state = CurrentGameState::Loss;
         }
     }
     end_game(p1stream, p2stream, p1_state, p2_state)
@@ -181,8 +321,8 @@ fn setup_game(
 fn end_game(
     p1stream: TcpStream,
     p2stream: TcpStream,
-    p1result: CurrentGameState,
-    p2result: CurrentGameState,
+    p1result: CurrentState,
+    p2result: CurrentState,
 ) {
     let _ = report_data_to_client(&p1stream, &p1result);
     let _ = report_data_to_client(&p2stream, &p2result);
