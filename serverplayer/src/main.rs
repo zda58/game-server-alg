@@ -15,6 +15,10 @@ use std::net::TcpStream;
 fn main() {
     let server_address = get_server_address();
     let count = get_game_count();
+    init_games(server_address, count);
+}
+
+fn init_games(server_address: String, count: i32) {
     let mut wins = 0;
     let mut losses = 0;
     for _ in 0..count {
