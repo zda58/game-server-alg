@@ -4,7 +4,6 @@ use serverinfo::data::{
     coord::Coord,
     gamesetup::GameSetup,
     shipinfo::{ShipCoord, ShipInfo},
-    shots::ShotRequest,
 };
 
 use crate::data::ship::Ship;
@@ -96,8 +95,8 @@ pub fn validate_ship_coords(
     return true;
 }
 
-pub fn validate_shot_info(shots: &Vec<Coord>, request: &ShotRequest, setup: &GameSetup) -> bool {
-    if shots.len() != request.shots as usize {
+pub fn validate_shot_info(shots: &Vec<Coord>, count: i32, setup: &GameSetup) -> bool {
+    if shots.len() != count as usize {
         return false;
     }
     for shot in shots {
