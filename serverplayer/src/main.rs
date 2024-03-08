@@ -11,7 +11,6 @@ use serverinfo::data::shipinfo::ShipInfo;
 use serverinfo::data::shots::{ShotRequest, Shots};
 use std::io::{self, BufRead, BufReader, Write};
 use std::net::TcpStream;
-use std::process::exit;
 
 fn main() {
     let server_address = get_server_address();
@@ -42,32 +41,35 @@ fn get_server_address() -> String {
     println!("Enter the address to connect to:");
 
     let mut server_address = String::new();
-    match io::stdin().read_line(&mut server_address) {
-        Ok(_) => (),
-        Err(_) => {
-            println!("Failed to read line");
-            exit(1);
+    loop {
+        match io::stdin().read_line(&mut server_address) {
+            Ok(_) => return server_address.trim().to_owned(),
+            Err(_) => {
+                println!("Failed to read line");
+                continue;
+            }
         }
     }
-    server_address.trim().to_owned()
 }
 
 fn get_game_count() -> i32 {
     println!("Enter the number of games to play:");
 
     let mut input = String::new();
-    match io::stdin().read_line(&mut input) {
-        Ok(_) => (),
-        Err(_) => {
-            println!("Failed to read line");
-            exit(1);
+    loop {
+        match io::stdin().read_line(&mut input) {
+            Ok(_) => (),
+            Err(_) => {
+                println!("Failed to read line");
+                continue;
+            }
         }
-    }
-    match input.trim().parse::<i32>() {
-        Ok(count) => return count,
-        Err(_) => {
-            println!("Failed to parse count");
-            exit(1);
+        match input.trim().parse::<i32>() {
+            Ok(count) => return count,
+            Err(_) => {
+                println!("Failed to parse count");
+                continue;
+            }
         }
     }
 }
@@ -92,7 +94,13 @@ fn init_game(
             Ongoing => (),
         }
         // AlgorithmPlayer calculates this on its own
-        let _ = get_data_from_server::<ShotRequest>(reader).unwrap();
+        match get_data_from_server::<ShotRequest>(reader) {
+            Ok(_) => (),
+            Err(_) => {
+                println!("Failed to get data!");
+                break;
+            }
+        }
         let shots = player.take_shots();
         let mut json_shots: Vec<Coord> = Vec::with_capacity(shots.len());
         for shot in shots {
@@ -103,7 +111,13 @@ fn init_game(
         }
         let response: Shots = Shots { shots: json_shots };
         report_data_to_server::<Shots>(&server_stream, &response);
-        let report = get_data_from_server::<Report>(reader).unwrap();
+        let report = match get_data_from_server::<Report>(reader) {
+            Ok(report) => report,
+            Err(_) => {
+                println!("Failed to get data!");
+                break;
+            },
+        };
         let mut damaged_coords: Vec<Coord> = Vec::with_capacity(report.coords_damaged.len());
         for shot in report.coords_damaged {
             damaged_coords.push(Coord {
@@ -138,7 +152,7 @@ fn get_data_from_server<T: DeserializeOwned>(
         match reader.read_line(&mut buffer) {
             Ok(0) => {
                 println!("Server closed");
-                exit(0);
+                return Err(io::ErrorKind::ConnectionAborted.into())
             }
             Ok(_) => {
                 println!("{}", buffer);
