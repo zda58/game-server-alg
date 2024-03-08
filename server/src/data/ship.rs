@@ -1,4 +1,4 @@
-use serverinfo::json::coord::Coord;
+use serverinfo::data::coord::Coord;
 
 pub struct Ship {
     coords: Vec<Coord>,

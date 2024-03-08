@@ -1,22 +1,22 @@
-use serverinfo::json::coord::Coord;
 use crate::data::ship::Ship;
 use serde::Serialize;
+use serverinfo::data::coord::Coord;
 use serverinfo::{
     self,
-    json::{gamesetup::GameSetup, shipinfo::ShipInfo},
+    data::{gamesetup::GameSetup, shipinfo::ShipInfo},
 };
 
 pub struct GameData {
     pub p1board: Vec<Vec<Coord>>,
     pub p2board: Vec<Vec<Coord>>,
     pub p1ships: Vec<Ship>,
-    pub p2ships: Vec<Ship>
+    pub p2ships: Vec<Ship>,
 }
 
 impl GameData {
     pub fn new(setup: &GameSetup, p1info: &ShipInfo, p2info: &ShipInfo) -> Self {
         let mut p1board =
-            vec![vec![Coord {x: 0, y: 0}; setup.width as usize]; setup.height as usize];
+            vec![vec![Coord { x: 0, y: 0 }; setup.width as usize]; setup.height as usize];
         for y in 0..setup.height {
             for x in 0..setup.width {
                 p1board[y as usize][x as usize].x = x;
@@ -24,7 +24,7 @@ impl GameData {
             }
         }
         let mut p2board =
-            vec![vec![Coord {x: 0, y: 0}; setup.width as usize]; setup.height as usize];
+            vec![vec![Coord { x: 0, y: 0 }; setup.width as usize]; setup.height as usize];
         for y in 0..setup.height {
             for x in 0..setup.width {
                 p2board[y as usize][x as usize].x = x;

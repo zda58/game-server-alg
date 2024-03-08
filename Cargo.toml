@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "localplayer",
     "serverplayer",
-    "server"
-, "serverinfo"]
+    "server", 
+    "serverinfo", 
+    "algorithmplayer"]

@@ -3,6 +3,14 @@
 version = 3
 
 [[package]]
+name = "algorithmplayer"
+version = "0.1.0"
+dependencies = [
+ "rand",
+ "serverinfo",
+]
+
+[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -53,13 +61,6 @@ dependencies = [
  "neli",
  "thiserror",
  "windows-sys",
-]
-
-[[package]]
-name = "localplayer"
-version = "0.1.0"
-dependencies = [
- "rand",
 ]
 
 [[package]]
@@ -206,6 +207,7 @@ dependencies = [
 name = "serverplayer"
 version = "0.1.0"
 dependencies = [
+ "algorithmplayer",
  "rand",
  "serde",
  "serde_json",
