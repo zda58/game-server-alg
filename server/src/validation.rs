@@ -20,31 +20,26 @@ pub fn validate_setup_info(ship_info: &ShipInfo, setup: &GameSetup) -> bool {
         || battleships != ship_info.battleships.len() as i32
         || carriers != ship_info.carriers.len() as i32
     {
-        println!("1");
         return false;
     }
     let mut coords: HashSet<Coord> = HashSet::new();
     for submarine in &ship_info.submarines {
         if !validate_ship_coords(setup, 3, submarine, &mut coords) {
-            println!("2");
             return false;
         }
     }
     for destroyer in &ship_info.destroyers {
         if !validate_ship_coords(setup, 4, destroyer, &mut coords) {
-            println!("3");
             return false;
         }
     }
     for battleship in &ship_info.battleships {
         if !validate_ship_coords(setup, 5, battleship, &mut coords) {
-            println!("4");
             return false;
         }
     }
     for carrier in &ship_info.carriers {
         if !validate_ship_coords(setup, 6, carrier, &mut coords) {
-            println!("5");
             return false;
         }
     }

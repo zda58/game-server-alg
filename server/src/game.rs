@@ -1,6 +1,5 @@
 use std::io::{self, BufRead, BufReader, Write};
 use std::net::TcpStream;
-use std::process::exit;
 
 use serde::{de::DeserializeOwned, Serialize};
 use serverinfo::data::coord::Coord;
@@ -28,14 +27,14 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         Ok(info) => p1_info = info,
         Err(_) => {
             end_game(p1stream, p2stream, Loss, Win);
-            exit(0)
+            return;
         }
     }
     match setup_game(&mut p2_reader, &p2stream, &setup) {
         Ok(info) => p2_info = info,
         Err(_) => {
             end_game(p1stream, p2stream, Win, Loss);
-            exit(0)
+            return;
         }
     }
 
@@ -54,14 +53,14 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         match report_data_to_client::<CurrentGameState>(&p1stream, &p1_state) {
             Err(_) => {
                 end_game(p1stream, p2stream, Loss, Win);
-                exit(0)
+                return;
             },
             _ => ()
         }
         match report_data_to_client::<CurrentGameState>(&p2stream, &p2_state) {
             Err(_) => {
                 end_game(p1stream, p2stream, Loss, Win);
-                exit(0)
+                return;
             },
             _ => ()
         }
@@ -72,7 +71,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         match report_data_to_client::<ShotRequest>(&p1stream, &shot_request) {
             Err(_) => {
                 end_game(p1stream, p2stream, Loss, Win);
-                exit(0)
+                return;
             },
             _ => ()
         }
@@ -85,7 +84,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         match report_data_to_client::<ShotRequest>(&p2stream, &shot_request) {
             Err(_) => {
                 end_game(p1stream, p2stream, Win, Loss);
-                exit(0)
+                return;
             },
             _ => ()
         }
@@ -125,7 +124,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         match report_data_to_client(&p1stream, &p1report) {
             Err(_) => {
                 end_game(p1stream, p2stream, Loss, Win);
-                exit(0)
+                return;
             },
             _ => (),
         }
@@ -136,7 +135,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         match report_data_to_client(&p2stream, &p2report) {
             Err(_) => {
                 end_game(p1stream, p2stream, Win, Loss);
-                exit(0)
+                return;
             },
             _ => (),
         }
