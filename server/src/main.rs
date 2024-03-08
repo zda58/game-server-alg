@@ -21,7 +21,9 @@ fn init_connections() -> (TcpStream, TcpStream) {
     println!("Listening on address: {}:{}", local_ip, addr.port());
 
     let first_stream = listener.incoming().find_map(|stream| stream.ok()).unwrap();
+    println!("first acquired");
     let second_stream = listener.incoming().find_map(|stream| stream.ok()).unwrap();
+    println!("second acquired");
 
     println!("Both acquired!");
     (first_stream, second_stream)
