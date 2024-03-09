@@ -1,109 +1,31 @@
-# battleshipBot
+# battleship server with heatmap-based agent
+<img width="1166" alt="Screenshot 2024-03-09 at 6 06 17 PM" src="https://github.com/axie2335/battleship_algorithm_server/assets/107224274/6648f4a0-f335-4047-b191-f2713aa1a5c4">
+A networked battleship game server with an included algorithmic agent
 
-To build server:
-cargo build --manifest-path=server/Cargo.toml
+## Server Specifications
+The state of the game goes as follows:
+1. Server is run and takes in as io the addresses for the Tcp streams of the two players.
+2. Once both players are connected, the server sends each player the game specifications.
+3. The server waits for both players to respond with their ship positions as lists.
+4. The server reports the current game state to both players.
+5. The server sends each player a request for a number of shots equivalent to the number of ships they have left.
+6. Each player responds with their shots as a list of coordinates. The number of shots must be
+   equal to the request, otherwise the offending player loses.
+7. The server receives the shots, and sends each player back a list of the shots that they hit,
+   and a list of shots that were damaged on their own board.
+8. The server goes back to step 4. This loop continues until one or both of the players have no ships left.
+   Then, the server will report to each player their game outcome and stop the game.
 
-To build player:
-cargo build --manifest-path=player/Cargo.toml
+All formatted payloads are sent as JSON, and their formats are specified in specification.json.
 
-to run either:
-cargo run --bin server/player
+## Player
+An example of a player agent is included in algorithmplayer.
+<img width="564" alt="image" src="https://github.com/axie2335/battleship_algorithm_server/assets/107224274/b28dc0ba-2870-4d2c-817a-51a8cced5321">
+This agent uses a probabilistic heatmap to find the most likely ship coordinates. Try to beat it with your own.
 
-Specifications:
-The server hoster will specify the board size and how many of each ship
-either player is allowed to have in the following format:
+## Build instructions
+To run server:
+cargo run --bin server
 
-{
-    message: "game_information",
-    height: i32,
-    width: i32,
-    ships: {
-        SUBMARINES: i32,
-        DESTROYERS: i32,
-        BATTLESHIPS: i32,
-        CARRIERS: i32
-    }
-}
-The players will then generate their boards and ships with a 15 second limit.
-Note that the board is indexed such that the y axis is reversed while the x axis
-is typical.
-
-The players will respond to the server with a list of their ships
-in the following format where each subsection MUST be of length corresponding
-to the number of ships with a number of coordinates both consecutive, of correct
-ship length, and non-overlapping:
-{
-    "SUBMARINES": [
-        [{"x": x, "y": y}, {"x": x, "y": y}, {"x": x, "y": y}],
-        [{"x": x, "y": y}, {"x": x, "y": y}, {"x": x, "y": y}],
-        ...
-    ],
-    "DESTROYERS": [
-        ...
-    ],
-    "BATTLESHIPS": [
-        ...
-    ],
-    "CARRIERS": [
-        ...
-    ]
-}
-Afterwards, the server will begin the game. The player will ping a player with the number
-of shots that it is allowed to take determined by how many ships of theirs which are still 
-alive, and the player will take shots on the opponents board.
-
-The shots will be communicated via the following format:
-server:
-{
-    "message": "shot_count",
-    "shots": i32
-}
-player:
-{
-    "shots": [
-        {
-            "x": x,
-            "y": y
-        },
-        {
-            "x": x,
-            "y": y
-        },
-        ...
-    ]
-}
-If the player shoots more shots than allowed, then the player will lose automatically.
-
-Once both players have shot, the server will send each player which coords on their board were hit,
-and which coords on the opponent's board were hit in the following format. 
-{
-    "message": "shot_information", 
-    "shots_hit": [
-        {"x": x, "y": y},
-        ...
-    ],
-    "coords_damaged": [
-        {"x": x, "y": y},
-        ...
-    ]
-}
-It is up to the player to keep track of this information to make informed decisions.
-
-This loop will continue until a player loses or a draw occurs, which will yield the following
-messages to the corresponding players:
-
-Win:
-{
-    "message": "game_result",
-    "state": "win"
-}
-Lose:
-{
-    "message": "game_result",
-    "state": "lose"
-}
-Draw:
-{
-    "message": "game_result",
-    "state": "draw"
-}
+To run player:
+cargo run --bin serverplayer
