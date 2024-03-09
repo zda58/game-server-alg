@@ -1,5 +1,6 @@
 # Battleship server with heatmap-based agent
 <img width="1166" alt="Screenshot 2024-03-09 at 6 06 17 PM" src="https://github.com/axie2335/battleship_algorithm_server/assets/107224274/6648f4a0-f335-4047-b191-f2713aa1a5c4">
+
 A networked battleship game server with an included algorithmic agent
 
 ## Server Specifications
@@ -22,6 +23,7 @@ All messages are sent as JSON. Message formats are specified in specification.md
 ## Player
 An example of a player agent is included in algorithmplayer.
 <img width="564" alt="image" src="https://github.com/axie2335/battleship_algorithm_server/assets/107224274/b28dc0ba-2870-4d2c-817a-51a8cced5321">
+
 This agent uses a probabilistic heatmap to find the most likely ship coordinates. Try to beat it with your own.
 
 ## Build instructions
