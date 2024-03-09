@@ -2,7 +2,6 @@ use algorithmplayer::algorithmplayer::AlgorithmPlayer;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serverinfo;
-use serverinfo::data::coord::Coord;
 use serverinfo::data::gamesetup::GameSetup;
 use serverinfo::data::gamestate::{CurrentGameState, CurrentState};
 use serverinfo::data::gamestate::CurrentGameState::{Draw, Loss, Ongoing, Win};
@@ -31,7 +30,6 @@ fn init_games(server_address: String, count: i32) {
         let player = playerinfo.0;
         let ship_info = playerinfo.1;
         report_data_to_server::<ShipInfo>(&server_stream, &ship_info);
-        player.draw_own_board();
         match init_game(&server_stream, &mut reader, player) {
             Win => wins += 1,
             Loss => losses += 1,
@@ -104,9 +102,7 @@ fn init_game(
                 break;
             }
         }
-        println!("taking shots");
         let shots = player.take_shots();
-        println!("end taking shots");
         let response: Shots = Shots { shots: shots };
         report_data_to_server::<Shots>(&server_stream, &response);
         let report = match get_data_from_server::<Report>(reader) {
@@ -139,7 +135,6 @@ fn get_data_from_server<T: DeserializeOwned>(
                 return Err(io::ErrorKind::ConnectionAborted.into())
             }
             Ok(_) => {
-                //println!("{}", buffer);
                 match serde_json::from_str::<T>(&buffer) {
                 Ok(report) => return Ok(report),
                 Err(e) => return Err(e.into()),

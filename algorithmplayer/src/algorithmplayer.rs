@@ -87,15 +87,4 @@ impl AlgorithmPlayer {
             .count() as u32;
         count
     }
-
-    pub fn draw_own_board(&self) {
-        println!();
-        println!("{} board", self.name);
-        for y in 0..self.own_board.len() {
-            for x in 0..self.own_board[0].len() {
-                print!(" {} ", self.own_board[y][x].symbol());
-            }
-            println!();
-        }
-    }
 }

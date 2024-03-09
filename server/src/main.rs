@@ -1,6 +1,5 @@
 use game::init_game;
 use local_ip_address::local_ip;
-use relm4::gtk::pango::ffi::PANGO_ATTR_BACKGROUND;
 use core::time;
 use std::{cmp, io, net::{TcpListener, TcpStream}, thread};
 
@@ -20,11 +19,10 @@ fn main() {
     let listener = init_port();
     loop {
         let streams: (TcpStream, TcpStream) = init_connections(&listener);
-
         let setup = GameSetup::new(height, width, ships.0, ships.1, ships.2, ships.3);
         println!("Game start!");
         init_game(streams.0, streams.1, setup);
-        thread::sleep(time::Duration::from_millis(2000));
+        thread::sleep(time::Duration::from_millis(10000));
     }
 }
 

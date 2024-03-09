@@ -10,9 +10,3 @@ serverinfo = { path = "../serverinfo" }
 local-ip-address = "0.5.7"
 serde_json = "1.0.113"
 serde = "1.0.196"
-# Core library
-relm4 = "0.6.2"
-# Optional: reusable components
-relm4-components = "0.6.2"
-# Optional: icons
-relm4-icons = { version = "0.6.0", features = ["plus"] }

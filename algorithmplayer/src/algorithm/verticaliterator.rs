@@ -96,7 +96,7 @@ impl VerticalIterator {
                     if self.hit_coords.borrow().contains(coord) {
                         self.coords.push(coord.clone());
                         let coord_y = coord.y;
-                        let coord_x = coord.x;
+                        let coord_x: i32 = coord.x;
                         if coord_y > 0 {
                             let top_coord = Coord {
                                 x: coord_x,
@@ -126,8 +126,8 @@ impl VerticalIterator {
     fn update_bottom_coord(&mut self) {
         match &self.bottom {
             Some(coord) => {
-                if self.shot_coords.borrow().contains(coord) {
-                    if self.hit_coords.borrow().contains(coord) {
+                if !self.shot_coords.borrow().contains(coord) {
+                    if !self.hit_coords.borrow().contains(coord) {
                         self.coords.push(coord.clone());
                         let coord_y = coord.y;
                         let coord_x = coord.x;

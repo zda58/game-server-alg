@@ -231,7 +231,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
                 game_view.report_player_shots(&p1_shots, &p2_shots);
                 game_view.report_player_damaged_coords(&p1_damaged_coords, &p2_damaged_coords);
                 game_stage = GameStage::P1ReportGameState;
-                thread::sleep(time::Duration::from_millis(10000));
+                thread::sleep(time::Duration::from_millis(500));
             },
         }
     }

@@ -108,7 +108,6 @@ impl AlgorithmModel {
             }
         }
 
-        print!("size of prior: {}", self.priority_coords.len());
         for coord in &self.priority_coords {
             self.other_board_heat_map[coord.y as usize][coord.x as usize]
                 .borrow_mut()
@@ -120,36 +119,7 @@ impl AlgorithmModel {
                 .borrow_mut()
                 .heat = 0;
         }
-
-        //self.print_heat_map_values();
     }
-
-    fn print_heat_map_values(&self) {
-        for row in &self.other_board_heat_map {
-            for coord in row {
-                let heat = coord.borrow().heat; // Example heat value
-                let len = match heat {
-                    0..=9 => 1,
-                    10..=99 => 2,
-                    100..=999 => 3,
-                    _ => 4
-                };
-                print!(" [");
-                match len {
-                    1 => print!(" {}  ", heat),
-                    2 => print!(" {} ", heat),
-                    3 => print!("{} ", heat),
-                    4 => print!("{}", heat),
-                    _ => ()
-                }
-                print!("] ");
-            }
-            println!();
-            println!();
-        }
-        println!();
-    }
-
 
     fn print_heat_map(&self) {
         let mut max = 0;
@@ -162,13 +132,16 @@ impl AlgorithmModel {
         }
         for row in &self.other_board_heat_map {
             for coord in row {
+                let rep_coord = Coord {x: coord.borrow().x, y: coord.borrow().y};
                 let heat = coord.borrow().heat; // Example heat value
-                //print!("{}", heat);
-                let color: String = match heat {
-                    4000.. => "\x1b[38;2;0;200;255m".to_owned(),
-                    _ => self.interpolate_color(max as f64, heat as f64),
+                let color: String = match self.hit_coords.borrow().contains(&rep_coord) {
+                    true => "\x1b[38;5;208m".to_owned(),
+                    false => match heat {
+                        4000.. => "\x1b[38;2;0;200;255m".to_owned(),
+                        _ => self.interpolate_color(max as f64, heat as f64),
+                    },
                 };
-                
+
                 let block = "\u{2588}";
                 print!("{}", color);
                 print!(" {}{} ", block, block);
@@ -220,9 +193,7 @@ impl AlgorithmModel {
     }
 
     pub fn record_successful_hits(&mut self, hits: Vec<Coord>) {
-        println!("recording successful hits:");
         for coord in hits.iter() {
-            println!("Coord: Y: {}, x: {}", coord.y, coord.x);
             self.hit_coords.borrow_mut().push(coord.clone());
         }
         for coord in self.shot_coords.borrow().iter() {
@@ -250,12 +221,11 @@ impl AlgorithmModel {
             }
         }
         self.update_heat_map();
-        self.print_heat_map_values();
     }
 
     fn create_new_iterators(&mut self, shots_that_hit_opponent_ships: Vec<Coord>) {
         for coord in shots_that_hit_opponent_ships.iter() {
-            let hit_coord = &self.other_board_heat_map[coord.x as usize][coord.y as usize];
+            let hit_coord = &self.other_board_heat_map[coord.y as usize][coord.x as usize];
             let mut already_iterator = false;
             let mut close_vertical = false;
             let mut close_horizontal = false;
@@ -264,10 +234,10 @@ impl AlgorithmModel {
                     x: hit_coord.borrow().x,
                     y: hit_coord.borrow().y,
                 }) || already_iterator;
-                //close_vertical = iterator.is_coord_close(Coord {
-                //    x: hit_coord.borrow().x,
-                //    y: hit_coord.borrow().y,
-                //}) || close_horizontal;
+                close_vertical = iterator.is_coord_close(Coord {
+                    x: hit_coord.borrow().x,
+                    y: hit_coord.borrow().y,
+                }) || close_vertical;
                 iterator.update_hits();
             }
             for iterator in self.horizontal_iterators.iter_mut() {
@@ -275,10 +245,10 @@ impl AlgorithmModel {
                     x: hit_coord.borrow().x,
                     y: hit_coord.borrow().y,
                 }) || already_iterator;
-                //close_horizontal = iterator.is_coord_close(Coord {
-                //    x: hit_coord.borrow().x,
-                //    y: hit_coord.borrow().y,
-                //}) || close_horizontal;
+                close_horizontal = iterator.is_coord_close(Coord {
+                    x: hit_coord.borrow().x,
+                    y: hit_coord.borrow().y,
+                }) || close_horizontal;
                 iterator.update_hits();
             }
             if !already_iterator {
@@ -328,9 +298,6 @@ impl AlgorithmModel {
             self.update_heat_map();
             self.remaining_coords
                 .sort_by(|a, b| b.borrow().heat.clone().cmp(&a.borrow().heat));
-            for coord in &self.remaining_coords {
-                print!("{}, ", coord.borrow().heat);
-            }
             let zerocoord = &self.remaining_coords[0];
             let coord = Coord {
                 x: zerocoord.borrow().x,
@@ -342,6 +309,8 @@ impl AlgorithmModel {
             self.remaining_coords.remove(0);
         }
         self.just_shot_coords.clear();
+        self.update_heat_map();
+        self.print_heat_map();
         shots
     }
 }
