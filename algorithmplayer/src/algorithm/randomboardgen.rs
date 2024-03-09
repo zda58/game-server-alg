@@ -92,9 +92,9 @@ pub fn generate_board(
 fn generate_horizontal_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> Vec<Coord> {
     let mut rand: rand::prelude::ThreadRng = rand::thread_rng();
     let coord_y = rand.gen_range(0..board[0].len());
-    let left_coord_x = rand.gen_range(0..board.len() - length + 1);
+    let left_coord_x = rand.gen_range(0..(board.len() - length + 1));
 
-    let mut vec: Vec<Coord> = Vec::new();
+    let mut vec: Vec<Coord> = Vec::with_capacity(length);
     for x in left_coord_x..left_coord_x + length {
         vec.push(Coord {
             x: x as i32,
@@ -107,9 +107,9 @@ fn generate_horizontal_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> 
 fn generate_vertical_coords(board: &mut Vec<Vec<OwnCoord>>, length: usize) -> Vec<Coord> {
     let mut rand: rand::prelude::ThreadRng = rand::thread_rng();
     let coord_x = rand.gen_range(0..board.len());
-    let top_coord_y = rand.gen_range(0..board.len() - length - 1);
+    let top_coord_y = rand.gen_range(0..(board.len() - length + 1));
 
-    let mut vec: Vec<Coord> = Vec::new();
+    let mut vec: Vec<Coord> = Vec::with_capacity(length);
     for y in top_coord_y..top_coord_y + length {
         vec.push(Coord {
             x: coord_x as i32,

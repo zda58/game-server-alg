@@ -44,8 +44,8 @@ fn init_games(server_address: String, count: i32) {
 fn get_server_address() -> String {
     println!("Enter the address to connect to:");
 
-    let mut server_address = String::new();
     loop {
+        let mut server_address = String::new();
         match io::stdin().read_line(&mut server_address) {
             Ok(_) => return server_address.trim().to_owned(),
             Err(_) => {
@@ -58,9 +58,8 @@ fn get_server_address() -> String {
 
 fn get_game_count() -> i32 {
     println!("Enter the number of games to play:");
-
-    let mut input = String::new();
     loop {
+        let mut input = String::new();
         match io::stdin().read_line(&mut input) {
             Ok(_) => (),
             Err(_) => {
@@ -105,15 +104,10 @@ fn init_game(
                 break;
             }
         }
+        println!("taking shots");
         let shots = player.take_shots();
-        let mut json_shots: Vec<Coord> = Vec::with_capacity(shots.len());
-        for shot in shots {
-            json_shots.push(Coord {
-                x: shot.x,
-                y: shot.y,
-            });
-        }
-        let response: Shots = Shots { shots: json_shots };
+        println!("end taking shots");
+        let response: Shots = Shots { shots: shots };
         report_data_to_server::<Shots>(&server_stream, &response);
         let report = match get_data_from_server::<Report>(reader) {
             Ok(report) => report,
@@ -122,22 +116,8 @@ fn init_game(
                 break;
             },
         };
-        let mut damaged_coords: Vec<Coord> = Vec::with_capacity(report.coords_damaged.len());
-        for shot in report.coords_damaged {
-            damaged_coords.push(Coord {
-                x: shot.x,
-                y: shot.y,
-            });
-        }
-        let mut successful_hits: Vec<Coord> = Vec::with_capacity(report.shots_hit.len());
-        for shot in report.shots_hit {
-            successful_hits.push(Coord {
-                x: shot.x,
-                y: shot.y,
-            });
-        }
-        player.report_damage(damaged_coords);
-        player.record_successful_hits(successful_hits);
+        player.report_damage(report.coords_damaged);
+        player.record_successful_hits(report.shots_hit);
     }
     match game_state.current_state {
         Win => println!("WIN"),
@@ -159,7 +139,7 @@ fn get_data_from_server<T: DeserializeOwned>(
                 return Err(io::ErrorKind::ConnectionAborted.into())
             }
             Ok(_) => {
-                println!("{}", buffer);
+                //println!("{}", buffer);
                 match serde_json::from_str::<T>(&buffer) {
                 Ok(report) => return Ok(report),
                 Err(e) => return Err(e.into()),

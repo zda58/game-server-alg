@@ -108,12 +108,95 @@ impl AlgorithmModel {
             }
         }
 
-        for coord in self.priority_coords.iter() {
+        print!("size of prior: {}", self.priority_coords.len());
+        for coord in &self.priority_coords {
             self.other_board_heat_map[coord.y as usize][coord.x as usize]
                 .borrow_mut()
                 .heat += 5000;
         }
+
+        for coord in &self.just_shot_coords {
+            self.other_board_heat_map[coord.y as usize][coord.x as usize]
+                .borrow_mut()
+                .heat = 0;
+        }
+
+        //self.print_heat_map_values();
     }
+
+    fn print_heat_map_values(&self) {
+        for row in &self.other_board_heat_map {
+            for coord in row {
+                let heat = coord.borrow().heat; // Example heat value
+                let len = match heat {
+                    0..=9 => 1,
+                    10..=99 => 2,
+                    100..=999 => 3,
+                    _ => 4
+                };
+                print!(" [");
+                match len {
+                    1 => print!(" {}  ", heat),
+                    2 => print!(" {} ", heat),
+                    3 => print!("{} ", heat),
+                    4 => print!("{}", heat),
+                    _ => ()
+                }
+                print!("] ");
+            }
+            println!();
+            println!();
+        }
+        println!();
+    }
+
+
+    fn print_heat_map(&self) {
+        let mut max = 0;
+        for row in &self.other_board_heat_map {
+            for coord in row {
+                if (coord.borrow().heat < 5000 && coord.borrow().heat > max) {
+                    max = coord.borrow().heat;
+                }
+            }
+        }
+        for row in &self.other_board_heat_map {
+            for coord in row {
+                let heat = coord.borrow().heat; // Example heat value
+                //print!("{}", heat);
+                let color: String = match heat {
+                    4000.. => "\x1b[38;2;0;200;255m".to_owned(),
+                    _ => self.interpolate_color(max as f64, heat as f64),
+                };
+                
+                let block = "\u{2588}";
+                print!("{}", color);
+                print!(" {}{} ", block, block);
+            }
+            println!();
+            println!();
+        }
+        println!();
+    }
+
+    fn interpolate_color(&self, max: f64, value: f64) -> String {
+        let ratio = (value) / (max);
+        let gray = 90.0;
+        let red = 31.0;
+        let orange = 208.0;
+        let yellow = 33.0;
+        
+        let gray_red = gray + ratio * (red - gray);
+        let red_orange = red + ratio * (orange - red);
+        let orange_yellow = orange + ratio * (yellow - orange);
+        
+        let r = (gray_red + 0.5) as u8;
+        let g = (red_orange + 0.5) as u8;
+        let b = (orange_yellow + 0.5) as u8;
+        
+        format!("\x1b[38;2;{};{};{}m", r, g, b)
+    }
+    
 
     fn update_valid_position_coords(&mut self, coords: Vec<Coord>) {
         for coord in coords.iter() {
@@ -137,7 +220,9 @@ impl AlgorithmModel {
     }
 
     pub fn record_successful_hits(&mut self, hits: Vec<Coord>) {
+        println!("recording successful hits:");
         for coord in hits.iter() {
+            println!("Coord: Y: {}, x: {}", coord.y, coord.x);
             self.hit_coords.borrow_mut().push(coord.clone());
         }
         for coord in self.shot_coords.borrow().iter() {
@@ -151,7 +236,7 @@ impl AlgorithmModel {
         for iterator in self.vertical_iterators.iter_mut() {
             iterator.update_hits();
             for coord in iterator.get_priority_shots() {
-                if self.priority_coords.contains(&coord) {
+                if !self.priority_coords.contains(&coord) {
                     self.priority_coords.push(coord);
                 }
             }
@@ -159,11 +244,13 @@ impl AlgorithmModel {
         for iterator in self.horizontal_iterators.iter_mut() {
             iterator.update_hits();
             for coord in iterator.get_priority_shots() {
-                if self.priority_coords.contains(&coord) {
+                if !self.priority_coords.contains(&coord) {
                     self.priority_coords.push(coord);
                 }
             }
         }
+        self.update_heat_map();
+        self.print_heat_map_values();
     }
 
     fn create_new_iterators(&mut self, shots_that_hit_opponent_ships: Vec<Coord>) {
@@ -177,10 +264,10 @@ impl AlgorithmModel {
                     x: hit_coord.borrow().x,
                     y: hit_coord.borrow().y,
                 }) || already_iterator;
-                close_vertical = iterator.is_coord_close(Coord {
-                    x: hit_coord.borrow().x,
-                    y: hit_coord.borrow().y,
-                }) || close_horizontal;
+                //close_vertical = iterator.is_coord_close(Coord {
+                //    x: hit_coord.borrow().x,
+                //    y: hit_coord.borrow().y,
+                //}) || close_horizontal;
                 iterator.update_hits();
             }
             for iterator in self.horizontal_iterators.iter_mut() {
@@ -188,10 +275,10 @@ impl AlgorithmModel {
                     x: hit_coord.borrow().x,
                     y: hit_coord.borrow().y,
                 }) || already_iterator;
-                close_horizontal = iterator.is_coord_close(Coord {
-                    x: hit_coord.borrow().x,
-                    y: hit_coord.borrow().y,
-                }) || close_horizontal;
+                //close_horizontal = iterator.is_coord_close(Coord {
+                //    x: hit_coord.borrow().x,
+                //    y: hit_coord.borrow().y,
+                //}) || close_horizontal;
                 iterator.update_hits();
             }
             if !already_iterator {
@@ -241,6 +328,9 @@ impl AlgorithmModel {
             self.update_heat_map();
             self.remaining_coords
                 .sort_by(|a, b| b.borrow().heat.clone().cmp(&a.borrow().heat));
+            for coord in &self.remaining_coords {
+                print!("{}, ", coord.borrow().heat);
+            }
             let zerocoord = &self.remaining_coords[0];
             let coord = Coord {
                 x: zerocoord.borrow().x,
@@ -252,7 +342,6 @@ impl AlgorithmModel {
             self.remaining_coords.remove(0);
         }
         self.just_shot_coords.clear();
-        self.update_heat_map();
         shots
     }
 }
