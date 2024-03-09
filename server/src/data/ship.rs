@@ -1,9 +1,9 @@
 use serverinfo::data::coord::Coord;
 
 pub struct Ship {
-    coords: Vec<Coord>,
-    destroyed_coords: Vec<Coord>,
-    reported_hit_coords: Vec<Coord>,
+    pub coords: Vec<Coord>,
+    pub destroyed_coords: Vec<Coord>,
+    pub reported_hit_coords: Vec<Coord>,
 }
 
 impl Ship {

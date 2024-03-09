@@ -7,39 +7,19 @@ use serverinfo::{
 };
 
 pub struct GameData {
-    pub p1board: Vec<Vec<Coord>>,
-    pub p2board: Vec<Vec<Coord>>,
-    pub p1ships: Vec<Ship>,
-    pub p2ships: Vec<Ship>,
+    pub p1_ships: Vec<Ship>,
+    pub p2_ships: Vec<Ship>,
 }
 
 impl GameData {
     pub fn new(setup: &GameSetup, p1info: &ShipInfo, p2info: &ShipInfo) -> Self {
-        let mut p1board =
-            vec![vec![Coord { x: 0, y: 0 }; setup.width as usize]; setup.height as usize];
-        for y in 0..setup.height {
-            for x in 0..setup.width {
-                p1board[y as usize][x as usize].x = x;
-                p1board[y as usize][x as usize].x = y;
-            }
-        }
-        let mut p2board =
-            vec![vec![Coord { x: 0, y: 0 }; setup.width as usize]; setup.height as usize];
-        for y in 0..setup.height {
-            for x in 0..setup.width {
-                p2board[y as usize][x as usize].x = x;
-                p2board[y as usize][x as usize].x = y;
-            }
-        }
         let mut p1ships: Vec<Ship> = Vec::new();
         Self::insert_ships(&mut p1ships, p1info);
         let mut p2ships: Vec<Ship> = Vec::new();
         Self::insert_ships(&mut p2ships, p2info);
         Self {
-            p1board: p1board,
-            p2board: p2board,
-            p1ships: p1ships,
-            p2ships: p2ships,
+            p1_ships: p1ships,
+            p2_ships: p2ships,
         }
     }
 
@@ -119,10 +99,8 @@ impl GameData {
     }
     pub fn empty() -> Self {
         Self {
-            p1board: Vec::new(),
-            p2board: Vec::new(),
-            p1ships: Vec::new(),
-            p2ships: Vec::new(),
+            p1_ships: Vec::new(),
+            p2_ships: Vec::new(),
         }
     }
 }

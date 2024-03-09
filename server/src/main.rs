@@ -1,12 +1,14 @@
 use game::init_game;
 use local_ip_address::local_ip;
-use std::net::{TcpListener, TcpStream};
+use core::time;
+use std::{net::{TcpListener, TcpStream}, thread};
 
 use serverinfo::{self, data::gamesetup::GameSetup};
 mod data;
 mod game;
 mod gamedata;
 mod validation;
+mod view;
 
 fn main() {
     let listener = init_port();
@@ -14,11 +16,8 @@ fn main() {
         let streams: (TcpStream, TcpStream) = init_connections(&listener);
         let setup = GameSetup::new(15, 15, 3, 3, 3, 3);
         println!("Game start!");
-        match init_game(streams.0, streams.1, setup) {
-            game::GameOutcome::P1Win => println!("Player 1 wins!"),
-            game::GameOutcome::P2Win => println!("Player 2 wins!"),
-            game::GameOutcome::Draw => println!("Draw!"),
-        }
+        init_game(streams.0, streams.1, setup);
+        thread::sleep(time::Duration::from_millis(2000));
     }
 }
 
