@@ -20,7 +20,7 @@ fn main() {
         let setup = GameSetup::new(height, width, ships.0, ships.1, ships.2, ships.3);
         println!("Game start!");
         init_game(streams.0, streams.1, setup);
-        thread::sleep(time::Duration::from_millis(10000));
+        thread::sleep(time::Duration::from_millis(5000));
     }
 }
 
