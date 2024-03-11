@@ -48,10 +48,6 @@ impl GameView {
 
     pub fn draw_view(&mut self, p1_shots_taken: i32, p2_shots_taken: i32) {
         let clear_screen = "\x1b[2J";
-        let gray = "\x1b[38;5;242m";
-        let orange = "\x1b[38;5;208m";
-        let red = "\x1b[38;5;196m";
-        let light_blue = "\x1b[38;5;153m";
         let block = "\u{2588}";
         let reset_color = "\x1b[0m";
         let indent = "\x1b[5C";
@@ -61,138 +57,46 @@ impl GameView {
         print!("\x1b[{}C", 2 * width - 4);
         print!("Player 1");
         print!("\x1b[{}C", 4 * width + 4 - 8);
-        print!("Player 2");
-        println!();
+        print!("Player 2\n");
         print!("\x1b[{}C", 2 * width - 4);
         print!("Shots: {}", p1_shots_taken);
         print!("\x1b[{}C", 4 * width + 4 - 8);
-        print!("Shots: {}", p2_shots_taken);
-        println!();
-        println!();
+        print!("Shots: {}\n\n", p2_shots_taken);
 
         for i in 0..self.p1_board.len() {
             for j in 0..self.p1_board[i].len() {
-                let coord_p1 = &self.p1_board[i][j];
-                match coord_p1.piece {
-                    CoordPiece::Empty => {
-                        match coord_p1.state {
-                            State::Hit => print!("{}", red),
-                            State::Shot => print!("{}", orange),
-                            State::Normal => print!("{}", gray),
-                        }
-                    },
-                    CoordPiece::Ship => {
-                        match coord_p1.state {
-                            State::Hit => print!("{}", red),
-                            _ => print!("{}", light_blue),
-                        }
-                    },
-                }
+                print_coord_color(&self.p1_board[i][j]);
                 print!(" {}{} ", block, block);
             }
             print!("{}", indent);
             for j in 0..self.p1_board[i].len() {
-                let coord_p2 = &self.p2_board[i][j];
-                match coord_p2.piece {
-                    CoordPiece::Empty => {
-                        match coord_p2.state {
-                            State::Hit => print!("{}", red),
-                            State::Shot => print!("{}", orange),
-                            State::Normal => print!("{}", gray),
-                        }
-                    },
-                    CoordPiece::Ship => {
-                        match coord_p2.state {
-                            State::Hit => print!("{}", red),
-                            _ => print!("{}", light_blue),
-                        }
-                    },
-                }
+                print_coord_color(&self.p2_board[i][j]);
                 print!(" {}{} ", block, block);
             }
-            println!("{}", reset_color);
-            println!();
+            println!("{}\n", reset_color);
         }
     }
+}
 
-
-    pub fn draw_end_game(&mut self, p1_state: &CurrentState, p2_state: &CurrentState) {
-        let clear_screen = "\x1b[2J";
-        let gray = "\x1b[38;5;242m";
-        let orange = "\x1b[38;5;208m";
-        let red = "\x1b[38;5;196m";
-        let light_blue = "\x1b[38;5;153m";
-        let block = "\u{2588}";
-        let reset_color = "\x1b[0m";
-        let indent = "\x1b[5C";
-
-        print!("{}", clear_screen);
-        let width: i32 = self.p1_board[0].len() as i32;
-        print!("\x1b[{}C", 2 * width - 4);
-        print!("Player 1");
-        print!("\x1b[{}C", 4 * width + 4 - 8);
-        print!("Player 2");
-        println!();
-        print!("\x1b[{}C", 2 * width - 2);
-        match p1_state.current_state {
-            CurrentGameState::Win => print!("Win!"),
-            CurrentGameState::Loss => print!("Loss!"),
-            CurrentGameState::Draw => print!("Draw!"),
-            _ => (),
-        }
-        print!("\x1b[{}C", 4 * width + 4 - 4);
-        match p2_state.current_state {
-            CurrentGameState::Win => print!("Win!"),
-            CurrentGameState::Loss => print!("Loss!"),
-            CurrentGameState::Draw => print!("Draw!"),
-            _ => (),
-        }
-        println!();
-        println!();
-
-        for i in 0..self.p1_board.len() {
-            for j in 0..self.p1_board[i].len() {
-                let coord_p1 = &self.p1_board[i][j];
-                match coord_p1.piece {
-                    CoordPiece::Empty => {
-                        match coord_p1.state {
-                            State::Hit => print!("{}", red),
-                            State::Shot => print!("{}", orange),
-                            State::Normal => print!("{}", gray),
-                        }
-                    },
-                    CoordPiece::Ship => {
-                        match coord_p1.state {
-                            State::Hit => print!("{}", red),
-                            _ => print!("{}", light_blue),
-                        }
-                    },
-                }
-                print!(" {}{} ", block, block);
+fn print_coord_color(coord: &ViewCoord) {
+    let gray = "\x1b[38;5;242m";
+    let orange = "\x1b[38;5;208m";
+    let red = "\x1b[38;5;196m";
+    let light_blue = "\x1b[38;5;153m";
+    match coord.piece {
+        CoordPiece::Empty => {
+            match coord.state {
+                State::Hit => print!("{}", red),
+                State::Shot => print!("{}", orange),
+                State::Normal => print!("{}", gray),
             }
-            print!("{}", indent);
-            for j in 0..self.p1_board[i].len() {
-                let coord_p2 = &self.p2_board[i][j];
-                match coord_p2.piece {
-                    CoordPiece::Empty => {
-                        match coord_p2.state {
-                            State::Hit => print!("{}", red),
-                            State::Shot => print!("{}", orange),
-                            State::Normal => print!("{}", gray),
-                        }
-                    },
-                    CoordPiece::Ship => {
-                        match coord_p2.state {
-                            State::Hit => print!("{}", red),
-                            _ => print!("{}", light_blue),
-                        }
-                    },
-                }
-                print!(" {}{} ", block, block);
+        },
+        CoordPiece::Ship => {
+            match coord.state {
+                State::Hit => print!("{}", red),
+                _ => print!("{}", light_blue),
             }
-            println!("{}", reset_color);
-            println!();
-        }
+        },
     }
 }
 

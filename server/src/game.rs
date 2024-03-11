@@ -80,6 +80,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
             GameStage::P1ReportGameState => {
                 p1_shot_count = get_shot_counts(&game.p1_ships);
                 p2_shot_count = get_shot_counts(&game.p2_ships);
+                game_view.draw_view(p1_shot_count, p2_shot_count);
                 if p1_shot_count == 0 {
                     if p2_shot_count == 0 {
                         p1_state.current_state = CurrentGameState::Draw;
@@ -97,7 +98,6 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
                         break;
                     }
                 }
-                game_view.draw_view(p1_shot_count, p2_shot_count);
                 match report_data_to_client::<CurrentState>(&p1stream, &p1_state) {
                     Err(_) => {
                         p1_state.current_state = CurrentGameState::Loss;
@@ -236,7 +236,6 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         }
     }
     end_game(&p1stream, &p2stream, &p1_state, &p2_state);
-    game_view.draw_end_game(&p1_state, &p2_state);
 }
 
 fn setup_game(

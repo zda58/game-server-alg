@@ -115,6 +115,7 @@ fn init_game(
         player.report_damage(report.coords_damaged);
         player.record_successful_hits(report.shots_hit);
     }
+    print!("\x1b[0m");
     match game_state.current_state {
         Win => println!("WIN"),
         Loss => println!("LOSS"),

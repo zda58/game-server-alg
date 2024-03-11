@@ -20,7 +20,7 @@ fn main() {
         let setup = GameSetup::new(height, width, ships.0, ships.1, ships.2, ships.3);
         println!("Game start!");
         init_game(streams.0, streams.1, setup);
-        thread::sleep(time::Duration::from_millis(5000));
+        thread::sleep(time::Duration::from_millis(10000));
     }
 }
 
@@ -69,7 +69,6 @@ fn get_value(min: i32, max: i32, dim: &str) -> i32  {
 }
 
 fn get_ship_counts(max: i32) -> (i32, i32, i32, i32)  {
-    println!("Input ship counts like following: \"{{submarine count}} {{destroyer count}} {{battleship count}} {{carrier count}}\"");
     loop {
         let submarines: i32 = get_value(0, 50, "submarine count");
         let destroyers: i32 = get_value(0, 50, "destroyer count");

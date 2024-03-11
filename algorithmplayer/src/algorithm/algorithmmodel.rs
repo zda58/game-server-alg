@@ -146,8 +146,7 @@ impl AlgorithmModel {
                 print!("{}", color);
                 print!(" {}{} ", block, block);
             }
-            println!();
-            println!();
+            println!("\n");
         }
         println!();
     }
