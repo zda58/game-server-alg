@@ -73,7 +73,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
                         break;
                     }
                 }
-                game = GameData::new(&setup, &p1_info, &p2_info);
+                game = GameData::new(&p1_info, &p2_info);
                 game_view.populate_ships(&game.p1_ships, &game.p2_ships);
                 game_stage = GameStage::P1ReportGameState;
             },
@@ -236,7 +236,7 @@ pub fn init_game(p1stream: TcpStream, p2stream: TcpStream, setup: GameSetup) {
         }
     }
     end_game(&p1stream, &p2stream, &p1_state, &p2_state);
-    game_view.draw_end_game(&p1_state, &p2_state, &game);
+    game_view.draw_end_game(&p1_state, &p2_state);
 }
 
 fn setup_game(

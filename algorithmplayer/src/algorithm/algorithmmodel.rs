@@ -125,7 +125,7 @@ impl AlgorithmModel {
         let mut max = 0;
         for row in &self.other_board_heat_map {
             for coord in row {
-                if (coord.borrow().heat < 5000 && coord.borrow().heat > max) {
+                if coord.borrow().heat < 5000 && coord.borrow().heat > max {
                     max = coord.borrow().heat;
                 }
             }

@@ -11,10 +11,8 @@ mod validation;
 mod view;
 
 fn main() {
-    println!("Enter the desired height of the board (between 6 and 50):");
-    let height = get_dimension(6, 50);
-    println!("Enter the desired width of the board (between 6 and 50):");
-    let width = get_dimension(6, 50);
+    let height = get_value(6, 50, "height of the board (between 6 and 50)");
+    let width = get_value(6, 50, "width of the board (between 6 and 50)");
     let ships: (i32, i32, i32, i32) = get_ship_counts(cmp::max(height, width)); 
     let listener = init_port();
     loop {
@@ -42,7 +40,8 @@ fn init_connections(listener: &TcpListener) -> (TcpStream, TcpStream) {
     (first_stream, second_stream)
 }
 
-fn get_dimension(min: i32, max: i32) -> i32  {
+fn get_value(min: i32, max: i32, dim: &str) -> i32  {
+    println!("Enter the desired {}", dim);
     loop {
         let mut input = String::new();
         match io::stdin().read_line(&mut input) {
@@ -72,79 +71,13 @@ fn get_dimension(min: i32, max: i32) -> i32  {
 fn get_ship_counts(max: i32) -> (i32, i32, i32, i32)  {
     println!("Input ship counts like following: \"{{submarine count}} {{destroyer count}} {{battleship count}} {{carrier count}}\"");
     loop {
-        let mut input = String::new();
-        match io::stdin().read_line(&mut input) {
-            Ok(_) => (),
-            Err(_) => {
-                println!("Failed to read line");
-                continue;
-            }
-        }
-        let mut nums = input.trim().split_whitespace();
-
-        let submarines: i32 = match nums.next() {
-            Some(num) => {
-                match num.parse::<i32>() {
-                    Ok(num) => num,
-                    Err(_) => {
-                        println!("Failed to parse ships!");
-                        continue;
-                    },
-                }
-            },
-            None => {
-                println!("Failed to parse ships!");
-                continue;
-            }
-        };
-        let destroyers: i32 = match nums.next() {
-            Some(num) => {
-                match num.parse::<i32>() {
-                    Ok(num) => num,
-                    Err(_) => {
-                        println!("Failed to parse ships!");
-                        continue;
-                    },
-                }
-            },
-            None => {
-                println!("Failed to parse ships!");
-                continue;
-            }
-        };
-        let battleships: i32 = match nums.next() {
-            Some(num) => {
-                match num.parse::<i32>() {
-                    Ok(num) => num,
-                    Err(_) => {
-                        println!("Failed to parse ships!");
-                        continue;
-                    },
-                }
-            },
-            None => {
-                println!("Failed to parse ships!");
-                continue;
-            }
-        };
-        let carriers: i32 = match nums.next() {
-            Some(num) => {
-                match num.parse::<i32>() {
-                    Ok(num) => num,
-                    Err(_) => {
-                        println!("Failed to parse ships!");
-                        continue;
-                    },
-                }
-            },
-            None => {
-                println!("Failed to parse ships!");
-                continue;
-            }
-        };
+        let submarines: i32 = get_value(0, 50, "submarine count");
+        let destroyers: i32 = get_value(0, 50, "destroyer count");
+        let battleships: i32 = get_value(0, 50, "battleship count");
+        let carriers: i32 = get_value(0, 50, "carrier count");
     
         if submarines + destroyers + battleships + carriers > max {
-            println!("Ship count cannot exceed minimum dimension!");
+            println!("Ship count cannot exceed minimum dimension {}!", max);
             continue;
         } else {
             return (submarines, destroyers, battleships, carriers);

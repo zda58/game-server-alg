@@ -3,7 +3,7 @@ use serde::Serialize;
 use serverinfo::data::coord::Coord;
 use serverinfo::{
     self,
-    data::{gamesetup::GameSetup, shipinfo::ShipInfo},
+    data::shipinfo::ShipInfo,
 };
 
 pub struct GameData {
@@ -12,7 +12,7 @@ pub struct GameData {
 }
 
 impl GameData {
-    pub fn new(setup: &GameSetup, p1info: &ShipInfo, p2info: &ShipInfo) -> Self {
+    pub fn new(p1info: &ShipInfo, p2info: &ShipInfo) -> Self {
         let mut p1ships: Vec<Ship> = Vec::new();
         Self::insert_ships(&mut p1ships, p1info);
         let mut p2ships: Vec<Ship> = Vec::new();

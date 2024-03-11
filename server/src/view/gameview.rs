@@ -1,6 +1,6 @@
 use serverinfo::data::{coord::Coord, gamestate::{CurrentGameState, CurrentState}};
 
-use crate::{data::ship::Ship, gamedata::GameData};
+use crate::data::ship::Ship;
 
 pub struct GameView {
     p1_board: Vec<Vec<ViewCoord>>,
@@ -116,7 +116,7 @@ impl GameView {
     }
 
 
-    pub fn draw_end_game(&mut self, p1_state: &CurrentState, p2_state: &CurrentState, data: &GameData) {
+    pub fn draw_end_game(&mut self, p1_state: &CurrentState, p2_state: &CurrentState) {
         let clear_screen = "\x1b[2J";
         let gray = "\x1b[38;5;242m";
         let orange = "\x1b[38;5;208m";
