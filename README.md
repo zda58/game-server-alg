@@ -5,7 +5,7 @@ A networked battleship game server with an included algorithmic agent
 
 ## Server Specifications
 The state of the game goes as follows:
-1. Server is run and takes in as io the game specifications.
+1. Server is run and receives the game details.
 2. The server prints out its network port, and waits for players to connect.
 3. Once both players are connected, the server sends each player the game specifications.
 4. The server waits for both players to respond with their ship positions as lists.
@@ -20,11 +20,7 @@ The state of the game goes as follows:
 
 All messages are sent as JSON. Message formats are specified in specification.md.
 
-## Player
-An example of a player agent is included in algorithmplayer.
 <img width="564" alt="image" src="https://github.com/axie2335/battleship_algorithm_server/assets/107224274/b28dc0ba-2870-4d2c-817a-51a8cced5321">
-
-This agent uses a probabilistic heatmap to find the most likely ship coordinates. Try to beat it with your own.
 
 ## Build instructions
 To run server:
